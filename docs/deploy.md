@@ -22,6 +22,22 @@ python scripts/build_snapshot.py     # needs internet; about 30 minutes
 pytest test_snapshot.py test_deploy.py
 ```
 
+**Daily refresh.** You don't need to rebuild by hand to keep the date current. `.github/workflows/refresh-snapshot.yml`
+runs Monday to Friday at 18:00 IST, after NSE closes at 15:30. It rebuilds the snapshot from `main`, checks it
+offline (`test_snapshot.py`, `test_deploy.py`) and publishes it on the `snapshot-data` branch. That branch holds
+`snapshot.pkl.gz`, a `meta.json` with its sha256, and a single commit that is replaced on every publish, so the
+repository does not grow. The running app reads `meta.json` every 15 minutes and swaps in a newer snapshot. The
+sidebar's "Demo snapshot (date)" then moves to the last trading day without a redeploy or reboot. Details:
+
+- **Market holidays:** the prices don't move, so nothing is published.
+- **If a build fails** (for example, Yahoo Finance refuses the runner), the app keeps the last published snapshot,
+  or the one bundled in the repository if nothing has been published yet.
+- **US presets** show their previous session's close, which is their last completed session at 18:00 IST.
+- **To run it now:** GitHub → **Actions** → **refresh snapshot** → **Run workflow** (tick *force* to publish even
+  when the prices are not newer).
+- **Turning it off:** setting `RISK_TOOL_SNAPSHOT_URL=""` switches the app's check off. GitHub pauses scheduled
+  workflows in a public repository after 60 days without activity; re-enable it from the Actions tab.
+
 **Memory.** Streamlit's documentation gives each app 690 MB to 2.7 GB of memory and 0.078 to 2 CPU cores.
 `test_deploy.py` starts the app cold in snapshot mode with the network blocked, renders every page of the default
 portfolio, and checks the peak memory against the 690 MB minimum. `python scripts/measure_app.py [--live]` prints

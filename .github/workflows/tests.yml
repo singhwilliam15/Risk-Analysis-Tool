@@ -2,6 +2,7 @@ name: tests
 
 on:
   push:
+    branches-ignore: [snapshot-data]  # data only (refresh-snapshot.yml)
   pull_request:
 
 jobs:

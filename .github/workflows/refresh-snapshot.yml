@@ -1,0 +1,57 @@
+name: refresh snapshot
+
+# Rebuild the demo snapshot after each NSE session and publish it on the snapshot-data branch; the running app
+# picks it up within 15 minutes (ui/snapshot.py). On a market holiday the prices do not move and nothing is published.
+on:
+  schedule:
+    - cron: "30 12 * * 1-5"  # 18:00 IST, Monday to Friday: NSE closes at 15:30 IST; US presets show their last close
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish even if the prices are not newer than the published snapshot"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-snapshot
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # The snapshot needs the app's pandas version (pinned) and numpy major version; 3.11 matches the bundled one
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Build the snapshot (downloads prices from Yahoo Finance)
+        run: python scripts/build_snapshot.py
+      - name: Check it offline (every page renders, memory fits Streamlit Cloud)
+        run: pytest -q test_snapshot.py test_deploy.py
+      - name: Stage it
+        id: stage
+        run: python scripts/publish_snapshot.py publish ${{ inputs.force && '--force' || '' }}
+      - name: Publish on the snapshot-data branch (a single commit, replaced each time)
+        if: steps.stage.outputs.publish == 'true'
+        working-directory: publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q -b snapshot-data
+          git add snapshot.pkl.gz meta.json README.md
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Demo snapshot: prices to ${{ steps.stage.outputs.prices_as_of }}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" snapshot-data

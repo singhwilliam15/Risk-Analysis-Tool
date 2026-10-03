@@ -103,6 +103,71 @@ def test_compatible_checks_pandas_and_numpy_major():
     assert not snapshot.compatible({"pandas": "1.5.3", "numpy": now["numpy"]})
 
 
+def published(monkeypatch, data: dict, prices_as_of: str, sha256: str = None, meta: dict = None):
+    """Serve a published snapshot (meta.json + snapshot.pkl.gz) from memory; returns the list of fetched URLs."""
+    import hashlib
+    import json
+    meta = meta or {**snapshot.versions(), "prices_as_of": prices_as_of, "built": prices_as_of + "T18:40:00"}
+    blob = gzip.compress(pickle.dumps({"meta": meta, "data": data}))
+    files = {"meta.json": json.dumps({**meta, "sha256": sha256 or hashlib.sha256(blob).hexdigest()}).encode(),
+             "snapshot.pkl.gz": blob}
+    fetched = []
+
+    def fetch(url, timeout):
+        fetched.append(url.rsplit("/", 1)[-1])
+        return files[url.rsplit("/", 1)[-1]]
+    monkeypatch.setenv(snapshot.REMOTE_ENV, "https://example.invalid/snapshot-data/")
+    monkeypatch.setattr(snapshot, "_fetch", fetch)
+    return fetched
+
+
+def test_newer_compares_prices_then_build():
+    old = {"prices_as_of": "2026-10-02T00:00:00", "built": "2026-10-03T14:36:55"}
+    assert snapshot.newer({"prices_as_of": "2026-10-05T00:00:00", "built": "2026-10-05T18:40:00"}, old)
+    assert snapshot.newer({"prices_as_of": "2026-10-02T00:00:00", "built": "2026-10-04T18:40:00"}, old)
+    assert not snapshot.newer({"prices_as_of": "2026-10-01T00:00:00", "built": "2026-10-05T18:40:00"}, old)
+    assert snapshot.newer(old, None) and snapshot.newer(old, {})
+
+
+def test_newer_published_snapshot_replaces_the_bundled_one(store, monkeypatch):
+    store({"k": "bundled"})
+    fetched = published(monkeypatch, {"k": "published"}, "2026-10-05")
+    assert snapshot.load()["data"] == {"k": "published"}
+    assert snapshot.meta()["prices_as_of"] == "2026-10-05"
+    assert fetched == ["meta.json", "snapshot.pkl.gz"]
+    snapshot.load()
+    assert fetched == ["meta.json", "snapshot.pkl.gz"]  # not checked again within REMOTE_EVERY
+    monkeypatch.setattr(snapshot, "_checked", snapshot._checked - snapshot.REMOTE_EVERY)
+    snapshot.load()
+    assert fetched[-1] == "meta.json" and len(fetched) == 3  # checked again; same snapshot, so not downloaded
+
+
+def test_published_snapshot_is_ignored_when_older_corrupt_incompatible_or_offline(store, monkeypatch):
+    store({"k": "bundled"})  # prices to 2026-09-30
+    for kwargs in ({"prices_as_of": "2026-09-29"},                                 # older
+                   {"prices_as_of": "2026-10-05", "sha256": "0" * 64},             # checksum mismatch
+                   {"prices_as_of": "2026-10-05", "meta": {"pandas": "0.0.1", "numpy": "1.0",
+                                                           "prices_as_of": "2026-10-05"}}):  # other versions
+        snapshot.reset()
+        published(monkeypatch, {"k": "published"}, **kwargs)
+        assert snapshot.load()["data"] == {"k": "bundled"}, kwargs
+
+    def offline(url, timeout):
+        raise OSError("network blocked")
+    snapshot.reset()
+    monkeypatch.setattr(snapshot, "_fetch", offline)
+    assert snapshot.load()["data"] == {"k": "bundled"}
+    monkeypatch.setenv(snapshot.REMOTE_ENV, "")  # refresh switched off: never fetched
+    snapshot.reset()
+    monkeypatch.setattr(snapshot, "_fetch", lambda url, timeout: pytest.fail("fetched with the refresh off"))
+    assert snapshot.load()["data"] == {"k": "bundled"}
+
+
+def test_published_snapshot_is_used_when_none_is_bundled(store, monkeypatch):
+    published(monkeypatch, {"k": "published"}, "2026-10-05")
+    assert snapshot.load()["data"] == {"k": "published"}
+
+
 BUNDLED = os.path.join(ROOT, "data", "snapshot", "snapshot.pkl.gz")
 
 

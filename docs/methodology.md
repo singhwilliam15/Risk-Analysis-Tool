@@ -804,6 +804,12 @@ Three rules from prices up to the as-of date only, fixed before the test:
 - **Downloads come from the snapshot in snapshot mode.** The heavy functions therefore see identical inputs and reuse their stored results. Anything else (a new ticker, a changed setting) misses and is computed live.
 - **Results are keyed on inputs only, never on the mode.** A stored result is only ever returned for exactly the inputs it was computed from.
 - **When the snapshot is ignored:** if it was built with another pandas version or numpy major version, or if `RISK_TOOL_NO_SNAPSHOT` is set (the test suite sets it).
+- **Daily refresh.** `.github/workflows/refresh-snapshot.yml` rebuilds the snapshot after each NSE session and publishes it, with a `meta.json` holding its SHA-256, on the `snapshot-data` branch. Every 15 minutes the app checks `meta.json` and swaps in the published snapshot only if all of these hold:
+  - its prices are later (or, on the same prices, it was built later);
+  - its versions are compatible;
+  - its checksum matches.
+
+  Otherwise the app keeps what it has. The test suite turns the check off (`RISK_TOOL_SNAPSHOT_URL=""`).
 - **Tests:**
   - keys are stable across processes, ignore dict order and change with any value;
   - hits, misses and the live switch work as intended, and a caller's changes to a snapshot download do not reach the store;

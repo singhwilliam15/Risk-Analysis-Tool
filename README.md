@@ -10,7 +10,8 @@ real Indian collapses and against every NSE stock from 2016 to 2024, and it repo
 rules.
 
 **▶ Live demo: [risk-analysis-tool.streamlit.app](https://risk-analysis-tool.streamlit.app/)**.
-It opens on a demo snapshot of the presets (prices to 2 Oct 2026), so they load at once. Switch **Data → Live** in
+It opens on a demo snapshot of the presets, rebuilt after every NSE session (prices to the last trading day), so
+they load at once. Switch **Data → Live** in
 the sidebar for today's prices, or type any NSE, BSE or US ticker.
 
 | CRO dashboard | Integrated stress | Bank credit (RBI PCA) |
