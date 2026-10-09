@@ -120,10 +120,21 @@ def original_filings(listing: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(["quarter_end", "symbol"]).reset_index(drop=True)
 
 
-def done_urls() -> set:
+def read_parsed() -> list:
+    """Rows read so far; a line cut short by a shutdown is skipped (that filing is simply read again)."""
     if not PARSED.exists():
-        return set()
-    return {json.loads(line)["source"] for line in PARSED.read_text(encoding="utf-8").splitlines() if line.strip()}
+        return []
+    rows = []
+    for line in PARSED.read_text(encoding="utf-8").splitlines():
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            continue
+    return rows
+
+
+def done_urls() -> set:
+    return {row["source"] for row in read_parsed()}
 
 
 def download(client, filings: pd.DataFrame) -> None:
@@ -131,6 +142,9 @@ def download(client, filings: pd.DataFrame) -> None:
     todo = filings[~filings["xbrl"].isin(done)]
     print(f"{len(filings):,} original filings; {len(done):,} already read; {len(todo):,} to go", flush=True)
     started = time.time()
+    if PARSED.exists() and PARSED.stat().st_size and not PARSED.read_bytes().endswith(b"\n"):
+        with open(PARSED, "a", encoding="utf-8") as out:
+            out.write("\n")  # finish a line cut short by a shutdown, so new rows start on their own line
     with open(PARSED, "a", encoding="utf-8") as out, gzip.open(EXCERPTS, "at", encoding="utf-8") as ex:
         for i, f in enumerate(todo.itertuples(index=False), 1):
             r = client.get(f.xbrl)
@@ -160,7 +174,7 @@ def download(client, filings: pd.DataFrame) -> None:
 
 
 def write_outputs() -> None:
-    rows = pd.DataFrame([json.loads(l) for l in PARSED.read_text(encoding="utf-8").splitlines() if l.strip()])
+    rows = pd.DataFrame(read_parsed())
     rows = rows.drop_duplicates("source", keep="last")
     ok = rows[rows["status"] == "ok"].drop(columns="status")
     cols = ["symbol", "isin", "quarter_end", "disclosure_date", "measure", "promoter_holding_pct",
