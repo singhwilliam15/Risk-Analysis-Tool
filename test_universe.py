@@ -50,6 +50,14 @@ def test_both_formats_parse_to_the_same_columns():
     assert new.loc[0, "close"] == 2655.70 and new.loc[0, "prevclose"] == 2679.60
 
 
+def test_files_without_isin_are_left_out():
+    """NSE's bhavcopies before 22 Jun 2011 have no ISIN column: ETFs can't be told from companies, so no rows."""
+    text = ("SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,\n"
+            "20MICRONS,EQ,45.5,47.25,44.6,46.65,46.35,45.15,26971,1243031,03-JAN-2011,\n")
+    out = _day(text, "2011-01-03")
+    assert out.empty and list(out.columns) == U.PANEL_COLUMNS
+
+
 @pytest.mark.parametrize("subject, factor", [
     (" Bonus 1:1", 0.5),
     (" Bonus 2:5", 5 / 7),

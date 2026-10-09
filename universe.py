@@ -37,6 +37,8 @@ def normalise_bhavcopy(raw: pd.DataFrame, day) -> pd.DataFrame:
     """One day's bhavcopy (either format) → panel rows for company shares (ISIN INE…) in series EQ, BE and BZ."""
     raw = raw.rename(columns=lambda c: str(c).strip())
     mapping = UDIFF if "TckrSymb" in raw.columns else OLD
+    if "ISIN" not in raw.columns:  # NSE's files before 22 Jun 2011 have no ISIN: company shares can't be told from
+        return pd.DataFrame(columns=PANEL_COLUMNS)  # ETFs and fund units, so those days are left out
     out = raw[list(mapping)].rename(columns=mapping)
     out["symbol"] = out["symbol"].str.strip()
     out["series"] = out["series"].fillna("").str.strip()

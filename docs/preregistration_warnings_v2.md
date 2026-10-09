@@ -17,7 +17,8 @@ whether a better-calibrated rule beats momentum on data it was not designed on.
 
 - **Prices:** NSE daily bhavcopies, series EQ, BE and BZ, company ISINs only, including stocks that were later
   delisted. They are back-adjusted for bonuses and splits, and renamed symbols are chained (`universe.py`).
-- **Panel extension:** the panel is extended to **1 Jan 2011 – 31 Jan 2026**, from 2014–2025 before.
+- **Panel extension:** the panel is extended to **1 Jan 2011 – 31 Jan 2026**, from 2014–2025 before. Amendment 1
+  moves the start to 22 Jun 2011.
   - The earlier start gives R1 three years of daily ES history in the design period.
   - The later end completes the 12-month outcome window of the last test dates.
   - v1 and the baselines are re-run on the same extended panel.
@@ -149,3 +150,13 @@ cross-sectional thresholds of the latest month-end in the panel, labelled with t
 - **Blocks of 12 consecutive month-ends** in the bootstrap, instead of single dates, because neighbouring dates'
   outcome windows overlap.
 - **v1 compared on both its any-price-flag and its market-flag forms.**
+
+## Amendment 1 (10 Oct 2026, before any result was computed)
+
+The panel starts on **22 Jun 2011**, not 1 Jan 2011.
+- **Cause:** NSE's 117 bhavcopies from 3 Jan to 21 Jun 2011 have no ISIN column. The ISIN is how the panel
+  keeps out ETFs and fund units, which also trade in series EQ.
+- **Handling:** those days are left out rather than guessed (`universe.normalise_bhavcopy`).
+- **Effect on R1:** none. R1 needs about three years of rows before a date (250 rows for the first ES value,
+  then 500 ES values), so its first design date, Jan 2016, needs prices from about Jan 2013.
+- **Other rules:** unaffected.

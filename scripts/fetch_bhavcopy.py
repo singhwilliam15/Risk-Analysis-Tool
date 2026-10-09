@@ -2,7 +2,8 @@
 Download NSE's daily equity bhavcopies, corporate actions and symbol changes for the wider test
 (docs/case_studies.md, "Wider test"), and build one adjusted price panel.
 
-    python scripts/fetch_bhavcopy.py                    # 2014-01-01 to 2025-12-31, then build the panel
+    python scripts/fetch_bhavcopy.py                    # 2011-01-01 to 2026-01-31, then build the panel
+                                                        # (files before 22 Jun 2011 have no ISIN and are left out)
     python scripts/fetch_bhavcopy.py --build-only       # rebuild the panel from files already downloaded
 
 Bhavcopies list every security traded that day, including stocks later delisted, so the universe is not limited to
@@ -131,8 +132,8 @@ def build() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--start", default="2014-01-01")
-    parser.add_argument("--end", default="2025-12-31")
+    parser.add_argument("--start", default="2011-01-01")
+    parser.add_argument("--end", default="2026-01-31")
     parser.add_argument("--build-only", action="store_true")
     args = parser.parse_args()
     start, end = date.fromisoformat(args.start), date.fromisoformat(args.end)
