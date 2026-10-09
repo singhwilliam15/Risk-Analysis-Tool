@@ -71,6 +71,48 @@ def shareholding_pledge(text: str) -> dict:
             "report_date": pd.Timestamp(report.group(1)) if report else pd.NaT}
 
 
+OLD_PROMOTER_CONTEXT = "ShareholdingOfPromoterAndPromoterGroupI"  # filings before mid-2025 (older taxonomy)
+OLD_TOTAL_CONTEXT = "ShareholdingPatternI"
+PLEDGED, ENCUMBERED = "pledged", "pledged or otherwise encumbered"
+
+
+def shareholding_encumbered(text: str) -> dict:
+    """
+    The older shareholding-pattern taxonomy (filings to mid-2025): promoter holding and shares "pledged or otherwise
+    encumbered" (pledges and non-disposal undertakings together, so an upper bound on pledges), in percent (0-100).
+    None when the filing carries neither the promoter nor the total fact.
+    """
+    total_pct = _number(xbrl_fact(text, "ShareholdingAsAPercentageOfTotalNumberOfShares", OLD_TOTAL_CONTEXT))
+    scale = 1.0 if np.isfinite(total_pct) and total_pct > 1.5 else 100.0  # fractions → percent
+    total_shares = _number(xbrl_fact(text, "NumberOfShares", OLD_TOTAL_CONTEXT))
+    promoter = _number(xbrl_fact(text, "ShareholdingAsAPercentageOfTotalNumberOfShares", OLD_PROMOTER_CONTEXT)) * scale
+    report = re.search(r"<[A-Za-z\-]+:DateOfReport\b[^>]*>([^<]*)<", text)
+    report_date = pd.Timestamp(report.group(1)) if report else pd.NaT
+    if not np.isfinite(promoter):
+        if not np.isfinite(total_shares):
+            return None
+        return {"promoter_holding_pct": 0.0, "pledged_pct_of_promoter": 0.0, "pledged_pct_of_total": 0.0,
+                "pledged_shares": 0.0, "total_shares": total_shares, "report_date": report_date, "measure": ENCUMBERED}
+    encumbered = _number(xbrl_fact(text, "PledgedOrEncumberedNumberOfShares", OLD_PROMOTER_CONTEXT))
+    of_promoter = _number(xbrl_fact(text, "PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares",
+                                    OLD_PROMOTER_CONTEXT)) * scale
+    of_total = _number(xbrl_fact(text, "PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares",
+                                 OLD_TOTAL_CONTEXT)) * scale
+    any_encumbered = re.search(r"WhetherAnySharesHeldByPromotersArePledgeOrOtherwiseEncumbered\b[^>]*>\s*true", text)
+    if not np.isfinite(encumbered) and not any_encumbered:
+        encumbered, of_promoter, of_total = 0.0, 0.0, 0.0  # the filing says nothing is encumbered
+    return {"promoter_holding_pct": promoter, "pledged_pct_of_promoter": of_promoter, "pledged_pct_of_total": of_total,
+            "pledged_shares": encumbered, "total_shares": total_shares, "report_date": report_date, "measure": ENCUMBERED}
+
+
+def shareholding_any(text: str) -> dict:
+    """Either taxonomy: the current one (pledges only) first, then the older one (pledged or encumbered)."""
+    current = shareholding_pledge(text)
+    if current is not None:
+        return {**current, "measure": PLEDGED}
+    return shareholding_encumbered(text)
+
+
 def pledge_row(symbol: str, filing: dict, parsed: dict) -> dict:
     """One pledges-template row from a shareholding master record (date, broadcastDate, xbrl) and its parsed XBRL."""
     return {"symbol": symbol, "quarter_end": pd.to_datetime(filing["date"], format="%d-%b-%Y").strftime("%Y-%m-%d"),

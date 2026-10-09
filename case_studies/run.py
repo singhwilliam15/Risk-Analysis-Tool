@@ -30,10 +30,10 @@ RESULTS = K.ROOT / "results"
 CHART = K.ROOT.parent / "docs" / "images" / "case_studies.png"
 
 
-def prices_for(ticker: str, price_file: str = None):
+def prices_for(ticker: str, price_file: str = None, price_source: str = "uploaded file"):
     if price_file and Path(price_file).exists():
         raw = pd.read_csv(price_file, parse_dates=["Date"]).sort_values("Date")
-        return _add_return_columns(raw[[c for c in ("Date", "Open", "High", "Low", "Close", "Volume") if c in raw]]), "uploaded file"
+        return _add_return_columns(raw[[c for c in ("Date", "Open", "High", "Low", "Close", "Volume") if c in raw]]), price_source
     res = data_fetcher.fetch_stock_data(ticker, "max")
     return (res["df"], res["data_source"]) if res["success"] else (None, res["error"])
 
@@ -63,7 +63,7 @@ def main() -> int:
     frames, rows, missing = {}, [], []
     started = time.time()
     for case in [c for c in config["cases"] if c["enabled"]]:
-        df, source = prices_for(case["ticker"], case.get("price_file"))
+        df, source = prices_for(case["ticker"], case.get("price_file"), case.get("price_source", "uploaded file"))
         if df is None:
             missing.append({"Case": case["name"], "Ticker": case["ticker"], "Reason": f"no prices ({source})"})
             for months, as_of in K.as_of_dates(case["event_date"], config["as_of_months_before"]):

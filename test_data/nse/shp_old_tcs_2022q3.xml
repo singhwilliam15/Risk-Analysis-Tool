@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Excerpt of NSE shareholding-pattern XBRL, TCS, quarter ended 30 Sep 2022 (older taxonomy): only the facts nse_sources.shareholding_encumbered reads. Source: https://nsearchives.nseindia.com/corporate/xbrl/SHP_173032_740585_21102022063056_WEB.xml -->
+<xbrli:xbrl xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:in-bse-shp="http://www.bseindia.com/xbrl/shp">
+<in-bse-shp:DateOfReport contextRef="OneI">2022-09-30</in-bse-shp:DateOfReport>
+<in-bse-shp:WhetherAnySharesHeldByPromotersArePledgeOrOtherwiseEncumbered contextRef="OneI">true</in-bse-shp:WhetherAnySharesHeldByPromotersArePledgeOrOtherwiseEncumbered>
+<in-bse-shp:NumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="shares" decimals="INF">2645386073</in-bse-shp:NumberOfShares>
+<in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="pure" decimals="INF">72.3</in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="shares" decimals="INF">12633090</in-bse-shp:PledgedOrEncumberedNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="pure" decimals="INF">0.48</in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares>
+<in-bse-shp:NumberOfShares contextRef="ShareholdingPatternI" unitRef="shares" decimals="INF">3659051373</in-bse-shp:NumberOfShares>
+<in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares contextRef="ShareholdingPatternI" unitRef="pure" decimals="INF">100</in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedNumberOfShares contextRef="ShareholdingPatternI" unitRef="shares" decimals="INF">12633090</in-bse-shp:PledgedOrEncumberedNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares contextRef="ShareholdingPatternI" unitRef="pure" decimals="INF">0.35</in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares>
+</xbrli:xbrl>

@@ -276,7 +276,7 @@ def yearly_metrics(results: pd.DataFrame, outcome: str = "event_observed") -> pd
     return pd.concat(out, ignore_index=True)
 
 
-def jump_base_rates(results: pd.DataFrame, n_boot: int = 1000, seed: int = 7) -> pd.DataFrame:
+def jump_base_rates(results: pd.DataFrame, n_boot: int = 1000, seed: int = 7, groups: dict = None) -> pd.DataFrame:
     """
     Jump calibration (methodology §12.4). For each proxy group of as-of dates: the forward daily rate of
     stock-specific falls (63 market days after the date), the stock's own trailing rate (the window the base model is
@@ -285,9 +285,9 @@ def jump_base_rates(results: pd.DataFrame, n_boot: int = 1000, seed: int = 7) ->
     dates; Elevated proxy = the liquidity flag (≥ 3 lower-circuit days in the window, the tool's Elevated circuit
     rule); High proxy = trading in series BE or BZ (trade-for-trade surveillance or non-compliance) on the date.
     """
-    groups = {"All stocks": pd.Series(True, index=results.index),
-              "Elevated proxy: ≥ 3 lower-circuit days": results["flag_liquidity"].astype(bool),
-              "High proxy: series BE/BZ": results["series"].isin(TRADE_FOR_TRADE)}
+    groups = groups or {"All stocks": pd.Series(True, index=results.index),
+                        "Elevated proxy: ≥ 3 lower-circuit days": results["flag_liquidity"].astype(bool),
+                        "High proxy: series BE/BZ": results["series"].isin(TRADE_FOR_TRADE)}  # or any {name: mask}
     rng = np.random.default_rng(seed)
     rows = []
     for name, mask in groups.items():

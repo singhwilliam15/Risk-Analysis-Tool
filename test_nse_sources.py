@@ -5,6 +5,7 @@ lookup and DD percentile used by the Credit page.
 """
 
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -157,3 +158,38 @@ def test_as_of_stamp():
 def test_the_40_percent_band_in_nses_file_is_accepted():
     clean, errors, _ = D.load_file("Symbol,Series,Security Name,Band,Remarks\nXYZ,EQ,XYZ LTD,40,-\n", "price_bands", as_of="2026-10-02")
     assert not errors and clean.iloc[0]["band_pct"] == 40.0
+
+
+# Older shareholding taxonomy (filings to mid-2025): "pledged or otherwise encumbered" (Phase G)
+
+def test_old_taxonomy_gives_jaiprakash_powers_encumbrance():
+    """JPPOWER, Sep 2022 (real excerpt): 1,556,518,421 of the promoters' 1,644,830,118 shares encumbered = 94.63%."""
+    parsed = N.shareholding_any(fixture("shp_old_jppower_2022q3.xml"))
+    assert parsed["measure"] == N.ENCUMBERED
+    assert parsed["promoter_holding_pct"] == pytest.approx(24.0)
+    assert parsed["pledged_pct_of_promoter"] == pytest.approx(94.63)
+    assert parsed["pledged_shares"] / 1644830118 == pytest.approx(0.9463, abs=5e-5)  # the stated % matches the counts
+    assert parsed["pledged_pct_of_total"] == pytest.approx(22.71)
+    assert parsed["total_shares"] == 6853458827 and parsed["report_date"] == pd.Timestamp("2022-09-30")
+
+
+def test_old_taxonomy_small_encumbrance_and_no_promoter_group():
+    tcs = N.shareholding_any(fixture("shp_old_tcs_2022q3.xml"))  # an encumbrance that is not a pledge
+    assert tcs["promoter_holding_pct"] == pytest.approx(72.3) and tcs["pledged_pct_of_promoter"] == pytest.approx(0.48)
+    itc = N.shareholding_any(fixture("shp_old_itc_2022q3.xml"))  # no promoter group
+    assert itc["promoter_holding_pct"] == 0 and itc["pledged_pct_of_promoter"] == 0 and itc["total_shares"] > 1e10
+
+
+def test_current_taxonomy_still_wins_and_is_labelled_as_pledges():
+    parsed = N.shareholding_any(fixture("shp_JPPOWER_2026-06-30_excerpt.xml"))
+    assert parsed["measure"] == N.PLEDGED and parsed["pledged_pct_of_promoter"] == pytest.approx(72.99)
+
+
+def test_old_taxonomy_in_fractions_is_scaled_and_missing_facts_are_none():
+    text = fixture("shp_old_jppower_2022q3.xml")
+    as_fractions = re.sub(r'(contextRef="(?:ShareholdingOfPromoterAndPromoterGroupI|ShareholdingPatternI)"[^>]*>)([0-9.]+)(<)',
+                          lambda m: m.group(1) + (str(float(m.group(2)) / 100) if float(m.group(2)) <= 100 else m.group(2)) + m.group(3),
+                          text)
+    parsed = N.shareholding_encumbered(as_fractions)
+    assert parsed["promoter_holding_pct"] == pytest.approx(24.0) and parsed["pledged_pct_of_promoter"] == pytest.approx(94.63)
+    assert N.shareholding_any("<xbrl></xbrl>") is None

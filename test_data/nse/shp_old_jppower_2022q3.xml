@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Excerpt of NSE shareholding-pattern XBRL, JPPOWER, quarter ended 30 Sep 2022 (older taxonomy): only the facts nse_sources.shareholding_encumbered reads. Source: https://nsearchives.nseindia.com/corporate/xbrl/SHP_171541_730909_18102022012831_WEB.xml -->
+<xbrli:xbrl xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:in-bse-shp="http://www.bseindia.com/xbrl/shp">
+<in-bse-shp:DateOfReport contextRef="OneI">2022-09-30</in-bse-shp:DateOfReport>
+<in-bse-shp:WhetherAnySharesHeldByPromotersArePledgeOrOtherwiseEncumbered contextRef="OneI">true</in-bse-shp:WhetherAnySharesHeldByPromotersArePledgeOrOtherwiseEncumbered>
+<in-bse-shp:NumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="shares" decimals="INF">1644830118</in-bse-shp:NumberOfShares>
+<in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="pure" decimals="INF">24</in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="shares" decimals="INF">1556518421</in-bse-shp:PledgedOrEncumberedNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares contextRef="ShareholdingOfPromoterAndPromoterGroupI" unitRef="pure" decimals="INF">94.63</in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares>
+<in-bse-shp:NumberOfShares contextRef="ShareholdingPatternI" unitRef="shares" decimals="INF">6853458827</in-bse-shp:NumberOfShares>
+<in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares contextRef="ShareholdingPatternI" unitRef="pure" decimals="INF">100</in-bse-shp:ShareholdingAsAPercentageOfTotalNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedNumberOfShares contextRef="ShareholdingPatternI" unitRef="shares" decimals="INF">1556518421</in-bse-shp:PledgedOrEncumberedNumberOfShares>
+<in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares contextRef="ShareholdingPatternI" unitRef="pure" decimals="INF">22.71</in-bse-shp:PledgedOrEncumberedSharesHeldAsPercentageOfTotalNumberOfShares>
+</xbrli:xbrl>
