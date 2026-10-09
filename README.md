@@ -24,10 +24,19 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
    But "price below its 200-day average" also warned on 15. It did so with 27.5% false alarms, and earlier on Zee
    and Future Retail. The tool's edge on these dates is precision, not catching more.
    [Case studies](docs/case_studies.md#does-it-beat-a-naive-rule-review-m1)
-2. **On every NSE stock from 2016 to 2024 (2,312 stocks, delisted ones included), the price flags barely beat
-   chance.** Their lift is 1.13 for a 50% fall within a year. "Down 30% in six months" does twice as well (2.25).
+2. **On every NSE stock from 2016 to 2024 (2,315 stocks, delisted ones included), the price flags barely beat
+   chance.** Their lift is 1.13 for a 50% fall within a year. "Down 30% in six months" does twice as well (2.24).
    The cause is one threshold: the 5% daily-ES floor, set with large caps in mind, fires on 72% of all NSE
-   stock-dates. It is reported, not re-tuned after the fact. [Wider test](docs/case_studies.md#wider-test-every-nse-stock-20162024-review-m1)
+   stock-dates.
+   - It was not re-tuned after the fact. Instead, four new rules were tested out of sample under a pre-registration:
+     designed on 2016–18, tested once on 2020–24.
+   - **The new rules did not beat momentum by a margin the test could confirm.** The pre-registered challenger, a
+     combined score, reached a lift of 2.26 against momentum's 1.78, but the 90% interval of the difference
+     (−0.58 to +1.05) includes zero.
+   - So the app keeps v1 and shows the challenger beside it.
+   - A simple peer-relative rule held a lift of about 2 in every test year, including 2020, when momentum
+     failed. It is reported as exploratory.
+   [Warnings v2](docs/case_studies.md#warnings-v2-out-of-sample-test-october-2026) [Wider test](docs/case_studies.md#wider-test-every-nse-stock-20162024-review-m1)
 3. **Cross-pillar effects appear only where the data create them.** Pledge selling and circuit locks move the price
    round after round, and the loss is split by exact Shapley values.
    - With real NSE pledge data, the 5-stock portfolio's Global Financial Crisis replay gains a +₹5,145 interaction

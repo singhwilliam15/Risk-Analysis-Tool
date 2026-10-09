@@ -2,12 +2,13 @@
 
 import streamlit as st
 
-from ui import backtest_tab, export_tab, models_tab, portfolio_tab, price_tab, stress_tab
+from ui import backtest_tab, early_warning, export_tab, models_tab, portfolio_tab, price_tab, stress_tab
 from ui.overview import render_overview
 
 
 def render(ctx):
     render_overview(ctx)
+    early_warning.render(ctx)
 
     tab_names = ["📊 Model Comparison", "📈 Price & Volatility", "⚡ Stress Testing", "🔬 Backtesting", "📥 Excel Report"]
     if ctx.is_portfolio:

@@ -625,8 +625,8 @@ Rating grades are read from the agencies' text (e.g. "CRISIL AA+", "[ICRA]A (Sta
   | Tier | p a day (a year), before | p a day, now | J, now | Basis of the new value |
   | --- | --- | --- | --- | --- |
   | Low | 0 | 0 | – | – |
-  | Elevated | 0.1% (22%) | **0** | −17% | 3+ lower-circuit days: excess rate of ≥ 10% falls −0.087% a day (90% range −0.131% to −0.050%); 20,574 falls |
-  | High | 0.5% (72%) | **0** | −34% | series BE/BZ: excess rate of ≥ 20% falls −0.001% a day (−0.034% to +0.030%); 2,080 falls |
+  | Elevated | 0.1% (22%) | **0** | −17% | 3+ lower-circuit days: excess rate of ≥ 10% falls −0.090% a day (90% range −0.131% to −0.052%); 20,589 falls |
+  | High | 0.5% (72%) | **0** | −34% | series BE/BZ: excess rate of ≥ 20% falls −0.001% a day (−0.032% to +0.028%); 2,080 falls |
 
   - **A jump** is a one-day fall of at least |J| on a day the Nifty fell less than 5%: market-wide crashes belong to the base distribution.
   - **The excess** is the rate over the 63 trading days after each month-end where the proxy holds, minus the stock's own rate over the window the base model is fitted on. The base model already carries the stock's own history of falls, so only an excess belongs in the overlay. A probability cannot be negative, so the default is the excess floored at 0.
@@ -778,7 +778,7 @@ Three rules from prices up to the as-of date only, fixed before the test:
 
 ### 15.2 Wider test
 
-- **Universe.** Every company share (ISIN INE…, series EQ/BE/BZ) in NSE's daily bhavcopies, 2014–2025.
+- **Universe.** Every company share (ISIN INE…, series EQ/BE/BZ) in NSE's daily bhavcopies, 22 Jun 2011 – 30 Jan 2026. Earlier files have no ISIN, so ETFs can't be told apart and those days are left out.
   - Prices are back-adjusted: every price before an ex-date is multiplied by the action's factor. "Bonus a:b" is b/(a + b); a face-value split from F₁ to F₂ is F₂/F₁; both together multiply.
   - Renamed symbols are chained using NSE's symbol-change file.
   - A stock counts on a month-end if it has 250 prior trading days and traded in the last 5 market days.
@@ -789,11 +789,49 @@ Three rules from prices up to the as-of date only, fixed before the test:
 - **Measures.** Precision P(event | flag), recall P(flag | event), base rate P(event), and lift = precision ÷ base rate; overall, for the liquid subset (median 60-day traded value ≥ ₹1 crore), by year, and without the symbols that have unexplained moves beyond ±40%.
 - **What it cannot test.** Credit (no point-in-time statements for the universe) and events (no point-in-time disclosures). Results are in [case_studies.md](case_studies.md#wider-test-every-nse-stock-20162024-review-m1).
 
-### 15.3 Tests
+### 15.3 Early-warning rules v2 (`warnings_v2.py`)
+
+The full design is in [preregistration_warnings_v2.md](preregistration_warnings_v2.md); results are in
+[case_studies.md](case_studies.md#warnings-v2-out-of-sample-test-october-2026).
+
+- **Daily ES95.** Each day, the historical ES of the last 500 rows' returns (at least 250), computed exactly as the
+  v1 flag computes it. It is vectorised with sliding windows, and a test checks it against `calculate_historical_var`.
+- **R1.** Today's ES ≥ the 90th percentile of the stock's previous 756 daily ES values (at least 500 needed).
+- **R2.** On each date, stocks are split into terciles of log median 60-day traded value. A stock is flagged when its
+  ES is at or above its tercile's 90th percentile.
+- **R3.** EWMA volatility (λ = 0.94) ≥ 1.5 × one-year volatility, and the close below its 200-day average.
+- **R4.** A logistic regression fitted by Newton–Raphson (IRLS, 10⁻⁶ ridge).
+  - The features are standardised R1 and R2 percentiles, the 126-day return, the distance from the 200-day
+    average, lower-circuit days in 60 rows, the −20% integrated-stress loss and the log traded value.
+  - It is fitted on 2016–2018 rows only; the code refuses any other date.
+  - Its threshold is the design-period 90th percentile of the score.
+- **Choosing the rule tested.** The challenger is the best design-period lift among rules flagging 5–25%. Only the
+  challenger faces the decision rule, which avoids picking a winner from several test results.
+- **Uncertainty.** A paired circular block bootstrap over runs of 12 consecutive month-ends, because neighbouring
+  dates share 11 of their 12 outcome months.
+  - Each resample sums per-date counts and recomputes every lift, and lift − lift(momentum).
+  - 2,000 resamples; 90% percentile intervals.
+- **Incremental value.** Every measure recomputed on stock-dates not flagged by "down ≥ 30% in 6 months".
+- **In the app (Market page).**
+  - v1 stays in use, because the challenger did not win.
+  - R4 is shown beside it for each NSE holding, computed from the holding's full Yahoo history.
+  - R2 and R4 compare the stock with the NSE cross-section of the panel's latest month-end
+    (`warnings_v2_reference.json`, built by `scripts/build_warning_reference.py`). That cross-section ages until
+    the panel is refreshed.
+  - Traded value there is close × Yahoo volume, which can include BSE volume.
+
+### 15.4 Tests
 
 - **Bhavcopies:** both NSE formats parse to the same columns, ETFs and bonds are dropped, and Reliance's real 1:1 bonuses (7 Sep 2017, 28 Oct 2024) become −0.56% and +0.49% days, not −50%.
 - **Rules:** every corporate-action wording seen in NSE's list parses to the right factor, and symbol chains follow A → B → C without relabelling a later, unrelated use of A.
 - **Flags and metrics:** the universe's price flags equal the case-study engine's on the same window, the baselines and metrics are checked by hand, and the jump base rates recover a planted 1% daily jump rate (with zero excess over the stock's own history).
+- **Warnings v2:**
+  - the rolling ES equals the tool's historical ES on every window, including one with a gap, and the v1 flag's ES on every as-of row;
+  - R1 is checked on hand-built and planted-burst histories, R2's terciles and percentiles by hand, and both branches of R3;
+  - changing every price after the as-of date leaves every feature unchanged;
+  - the logistic fit recovers known coefficients and refuses rows outside 2016–2018;
+  - the incremental and lead-time measures are checked by hand;
+  - the block bootstrap's 90% interval covers a known lift in 80–97% of 200 simulated panels with persistent date effects.
 
 ## 16. Demo snapshot (`ui/snapshot.py`, `scripts/build_snapshot.py`)
 

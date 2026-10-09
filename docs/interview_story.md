@@ -32,7 +32,10 @@ inside RBI's first PCA threshold six months before its moratorium.
 Then I checked it against simple rules. "Price below its 200-day average" also caught 15 of 20, with three times
 the false alarms, so my edge there is precision. On every NSE stock from 2016 to 2024, delisted ones included, my
 price flags barely beat chance: one tail-risk threshold, set with large caps in mind, fires on 72% of all NSE stock-days. "Down 30% in six months"
-did twice as well. I reported that rather than re-tuning after the fact.
+did twice as well. I reported that rather than re-tuning after the fact. Then I tested four new rules the way a
+researcher would: I wrote down the rules and the pass mark first, designed on 2016–18 and tested once on 2020–24.
+The best one scored higher than momentum, but not by a margin the test could confirm, so the app still uses the old
+flag and says so.
 
 **4. What I changed because of the evidence (20 seconds)**
 

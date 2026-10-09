@@ -372,6 +372,7 @@ decisions.py           Shapley risk change, Euler ES, trades, hedge, limits, top
 memo.py                One-page CRO memo (Markdown and PDF via reportlab + matplotlib)
 case_studies/          Evidence: cases.json, engine.py (flags, baselines), run.py, results/, data/ (transcribed statements)
 universe.py            The wider test on every NSE stock (bhavcopies, corporate actions) and the jump base rates
+warnings_v2.py         Early-warning rules v2 (own-history and peer ES, volatility shock, logistic score), tested out of sample
 data/disclosures/      Bundled NSE snapshot (raw JSON in raw/), manifest.json, templates and sources
 data/credit/           Agency default-rate tables (CRISIL, ICRA FY2025 studies) and the DD reference universe
 excel_exporter.py      Formatted Excel report

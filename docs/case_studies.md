@@ -124,51 +124,142 @@ Full rows: `case_studies/results/tally.csv` (pillars and baselines), `lead_times
 
 ## Wider test: every NSE stock, 2016–2024 (review M1)
 
-The 220 case and control dates select on the outcome. This test does not. It covers **every company listed on NSE** in the daily bhavcopies, including the 391 that later stopped trading, which Yahoo has dropped. It runs on the last trading day of each month from January 2016 to December 2024, and asks whether a stock **fell 50% or more from that close within the next 12 months**.
+The 220 case and control dates select on the outcome. This test does not. It covers **every company listed on NSE** in the daily bhavcopies, including the 397 that later stopped trading, which Yahoo has dropped. It runs on the last trading day of each month from January 2016 to December 2024, and asks whether a stock **fell 50% or more from that close within the next 12 months**.
 
 **Data** (`scripts/fetch_bhavcopy.py`, `universe.py`):
-- NSE's daily bhavcopies, 2014–2025: 2,959 trading days and 2,969 companies. Only company shares are kept (ISIN INE…, series EQ, BE and BZ), not ETFs or bonds.
-- Prices are back-adjusted for 804 bonuses and splits from NSE's corporate-action list. NSE's previous close is not adjusted: Reliance's 1:1 bonuses would otherwise show as −50% days.
+- NSE's daily bhavcopies, 22 Jun 2011 – 30 Jan 2026: 3,604 trading days and 3,050 companies (extended in October 2026 from 2014–2025, for the warnings-v2 test; earlier files have no ISIN). Only company shares are kept (ISIN INE…, series EQ, BE and BZ), not ETFs or bonds.
+- Prices are back-adjusted for 997 bonuses and splits from NSE's corporate-action list. NSE's previous close is not adjusted: Reliance's 1:1 bonuses would otherwise show as −50% days.
 - Renamed symbols are chained using NSE's symbol-change file.
-- 1,373 daily moves beyond ±40% have no listed bonus or split, in 170 symbols. They come from demergers, splits missing from NSE's list (JSW Steel 2017), and thin trading with weeks between trades. A separate run without these symbols gives the same conclusions.
+- 1,465 daily moves beyond ±40% have no listed bonus or split, in 192 symbols. They come from demergers, splits missing from NSE's list (JSW Steel 2017), and thin trading with weeks between trades. A separate run without these symbols gives the same conclusions.
 - The benchmark is the Nifty 50 index from Yahoo; an index has no survivorship problem.
 
 **Design, fixed before the run:**
-- Universe: every stock with at least 250 prior trading days that traded in the 5 days before the date: 2,312 stocks and 174,430 stock-dates.
+- Universe: every stock with at least 250 prior trading days that traded in the 5 days before the date: 2,315 stocks and 174,532 stock-dates.
 - Liquid subset: median 60-day traded value of at least ₹1 crore, 87,174 stock-dates.
 - The tool's rules are applied exactly as in the case studies, through the same function (`engine.price_flags`):
   - market: EWMA ≥ 1.5× one-year volatility, or ES95 ≥ 5%;
   - liquidity: 3 or more lower-circuit days;
   - integrated stress: a −20% market move costing 30% or more.
 - The baselines are the same three rules as above.
-- Credit and events cannot be tested here: there are no point-in-time statements or disclosures for 2,312 companies.
+- Credit and events cannot be tested here: there are no point-in-time statements or disclosures for 2,315 companies.
 
 **Results** (stock-dates; precision = share of flagged dates followed by a ≥ 50% fall; recall = share of falls that were flagged; lift = precision ÷ the base rate):
 
 | Rule | All stocks: flagged | Precision | Recall | **Lift** | Liquid stocks: flagged | Precision | Recall | **Lift** |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | *Base rate (a ≥ 50% fall followed)* | | *15.1%* | | | | *10.6%* | | |
-| Tool: any price flag | 78.8% | 17.1% | 89.3% | **1.13** | 65.8% | 13.2% | 82.0% | **1.25** |
-| Tool: market | 72.7% | 17.1% | 82.5% | 1.14 | 62.0% | 13.0% | 76.0% | 1.23 |
+| Tool: any price flag | 78.8% | 17.1% | 89.3% | **1.13** | 65.9% | 13.2% | 82.1% | **1.25** |
+| Tool: market | 72.8% | 17.1% | 82.6% | 1.14 | 62.0% | 13.0% | 76.0% | 1.23 |
 | Tool: liquidity (circuits) | 37.2% | 19.9% | 49.1% | 1.32 | 17.3% | 17.6% | 28.8% | 1.67 |
-| Tool: integrated stress | 60.0% | 19.6% | 78.1% | 1.30 | 37.6% | 17.3% | 61.5% | 1.64 |
-| (a) Down ≥ 30% in 6 months | 11.6% | **33.9%** | 26.1% | **2.25** | 6.1% | **26.4%** | 15.2% | **2.49** |
-| (b) Volatility in own top decile | 9.2% | 18.3% | 11.1% | 1.22 | 9.4% | 13.7% | 12.2% | 1.30 |
-| (c) Below 200-day average | 46.5% | 21.7% | 66.9% | 1.44 | 36.6% | 15.1% | 52.1% | 1.43 |
-| Any baseline | 51.3% | 20.8% | 70.7% | 1.38 | 42.4% | 14.4% | 57.6% | 1.36 |
+| Tool: integrated stress | 60.1% | 19.6% | 78.2% | 1.30 | 37.6% | 17.3% | 61.5% | 1.63 |
+| (a) Down ≥ 30% in 6 months | 11.6% | **33.9%** | 26.1% | **2.24** | 6.1% | **26.4%** | 15.2% | **2.49** |
+| (b) Volatility in own top decile | 9.7% | 18.0% | 11.6% | 1.20 | 9.7% | 13.7% | 12.5% | 1.29 |
+| (c) Below 200-day average | 46.5% | 21.7% | 66.8% | 1.44 | 36.6% | 15.1% | 52.1% | 1.43 |
+| Any baseline | 51.6% | 20.7% | 70.7% | 1.37 | 42.6% | 14.3% | 57.6% | 1.35 |
 
 What this says, plainly:
-- **On the whole market, the tool's price flags barely beat chance and lose to a naive rule.** "Any price flag" fires on 79% of stock-dates with a lift of 1.13. "Down 30% in 6 months" fires on 12% with a lift of 2.25, and "below the 200-day average" does better than the tool on every measure but recall.
-- **The reason is one threshold.** Daily ES95 ≥ 5% was set with large caps in mind. It is true on 71.5% of all NSE stock-dates, because small caps routinely have one-day tail losses that large. The 220-date test hid this: its controls are ten large caps.
-  - I have not changed the threshold after seeing this, to avoid fitting the test. A rule relative to the stock's own history or to its size bucket is the obvious next step, and it would need its own out-of-sample test.
+- **On the whole market, the tool's price flags barely beat chance and lose to a naive rule.** "Any price flag" fires on 79% of stock-dates with a lift of 1.13. "Down 30% in 6 months" fires on 12% with a lift of 2.24, and "below the 200-day average" does better than the tool on every measure but recall.
+- **The reason is one threshold.** Daily ES95 ≥ 5% was set with large caps in mind. It is true on 71.6% of all NSE stock-dates, because small caps routinely have one-day tail losses that large. The 220-date test hid this: its controls are ten large caps.
+  - I have not changed the threshold after seeing this, to avoid fitting the test. Rules relative to the stock's own history and to its liquidity bucket were then tested out of sample: see [Warnings v2](#warnings-v2-out-of-sample-test-october-2026).
 - **The tool's better flags are the circuit and stress ones**, with lifts of 1.3 overall and about 1.65 on liquid stocks. The stress flag's lift was above 1.1 in every year from 2016 to 2024.
 - **The momentum baseline is the strongest single rule, but not a stable one.** Its lift ranges from 0.76 (2020, when the COVID crash flagged everything and the market recovered) to 4.11 (2023).
 - **The conclusions hold under the stated alternatives:**
   - counting every stock that disappeared as a ≥ 50% loss (an upper bound, since mergers and buyouts also disappear): the tool's lift is 1.14, momentum's 2.25;
-  - dropping the 170 symbols with unexplained moves: 1.14 and 2.32.
+  - dropping the 192 symbols with unexplained moves: 1.14 and 2.32.
 - **Survivorship:** delisted companies are included for as long as they traded on NSE. Companies listed only on BSE, and trading after an NSE delisting, are not.
 
-Files: `case_studies/results/universe_metrics.csv` (all variants), `universe_yearly.csv`, `universe_meta.json` (counts); the stock-level rows are rebuilt by `scripts/run_universe.py` (21 minutes on 7 cores).
+Files: `case_studies/results/universe_metrics.csv` (all variants), `universe_yearly.csv`, `universe_meta.json` (counts); the stock-level rows are rebuilt by `scripts/run_universe.py` (14 minutes on 7 cores).
+
+## Warnings v2: out-of-sample test (October 2026)
+
+The wider test above showed the v1 flags barely beat chance. Phase F tested four replacement rules, using a
+design that fixed every choice before the results were seen:
+- **Pre-registration:** [docs/preregistration_warnings_v2.md](preregistration_warnings_v2.md), committed before any
+  result was computed. Its one amendment, the panel's start date, was also made before any result.
+- **Design period:** month-ends 2016–2018.
+- **Embargo:** 2019, whose outcomes overlap the test.
+- **Test period:** month-ends 2020–2024, evaluated **once**, with the R4 model and the choice of challenger frozen
+  in a commit beforehand.
+- **Outcome:** as above, a fall of ≥ 50% within 12 months.
+- **Universe:** every NSE stock, with the panel extended to June 2011 – January 2026 so that every rule has its
+  full history.
+
+**The candidates:**
+- **R1:** ES95 in the stock's own top decile of the last 3 years.
+- **R2:** ES95 in the top decile of its liquidity tercile on that date.
+- **R3:** EWMA volatility ≥ 1.5 × one-year volatility, and the close below its 200-day average.
+- **R4:** a logistic score on seven price features, fitted on 2016–2018 only.
+
+**The challenger.** R4 was picked on the design period, as the best lift among rules flagging 5–25% of
+stock-dates. Its design lift of 2.45 is in-sample. R3 flagged only 1.7% and was not eligible.
+
+**Decision rule.** R4 replaces the v1 market flag only if all of these hold on the test period:
+- its lift beats v1;
+- its lift beats "down ≥ 30% in 6 months";
+- the lower end of the 90% interval for its lift minus momentum's lift is above zero.
+
+**Test period, all NSE stocks** (102,207 stock-dates, base rate 6.3%). The 90% ranges come from a paired block
+bootstrap over runs of 12 consecutive month-ends, 2,000 resamples. The lead time is from the as-of date to the
+lowest close, on correct warnings.
+
+| Rule | Flagged | Precision | Recall | **Lift (90% range)** | Lead time (trading days) |
+| --- | --- | --- | --- | --- | --- |
+| **R4 combined score (challenger)** | 4.1% | 14.3% | 9.2% | **2.26 (1.89–2.85)** | 143 |
+| R2 peer-relative ES | 10.1% | 13.1% | 20.8% | **2.07 (1.87–2.45)** | 157 |
+| R1 own-history ES | 16.7% | 5.9% | 15.5% | 0.93 (0.73–1.53) | 132 |
+| R3 volatility shock with trend | 1.9% | 5.4% | 1.6% | 0.85 (0.48–2.32) | 151 |
+| v1 any price flag | 80.9% | 7.2% | 92.4% | 1.14 (1.07–1.22) | 162 |
+| v1 market flag | 75.8% | 7.1% | 85.2% | 1.12 (1.05–1.22) | 162 |
+| (a) Down ≥ 30% in 6 months | 7.7% | 11.3% | 13.7% | **1.78 (1.10–3.05)** | 153 |
+| (b) Volatility in own top decile | 10.1% | 6.2% | 9.9% | 0.98 (0.68–1.61) | 155 |
+| (c) Below 200-day average | 38.4% | 7.5% | 45.5% | 1.19 (1.06–1.36) | 150 |
+
+**Lift by year on the test period:**
+
+| Year | R4 | R2 | (a) momentum | v1 any flag |
+| --- | --- | --- | --- | --- |
+| 2020 | 1.93 | 1.99 | 0.76 | 0.95 |
+| 2021 | 1.27 | 2.03 | 2.61 | 1.08 |
+| 2022 | 2.72 | 2.15 | 2.82 | 1.20 |
+| 2023 | 2.49 | 3.18 | 4.11 | 1.29 |
+| 2024 | 2.13 | 1.91 | 2.49 | 1.28 |
+
+**Beyond momentum.** Among the 94,296 stock-dates *not* already down 30% (base rate 5.9%):
+- R4's lift is 2.06, flagging 2.9%.
+- R2's lift is 1.99, flagging 9.1% and catching 18.2% of the crashes.
+- v1's lift is 1.15.
+
+**Liquid stocks only** (median traded value ≥ ₹1 crore, base rate 5.3%):
+- R2: 2.23 (2.03–2.53);
+- R4: 2.33 (1.75–3.25), flagging only 1.9%;
+- momentum: 1.81 (1.20–2.98);
+- v1: 1.26.
+
+**Verdict, plainly:**
+- **The pre-registered challenger did not win, so the app keeps v1.** R4's lift (2.26) is higher than momentum's
+  (1.78), but the 90% interval of the difference runs from −0.58 to +1.05. The test cannot rule out that
+  momentum is as good. The Market page shows v1 in use and R4 beside it, with both records.
+- **The intervals are wide mainly because momentum is unstable.** Its lift was 0.76 in 2020, when the COVID crash
+  put 19% of stocks 30% down and most recovered, and 4.11 in 2023. Five test years are few independent
+  observations.
+- **Exploratory, not pre-registered as the challenger:**
+  - R2, a simple rule ("tail risk high for a stock of this liquidity"), held a lift of 1.9–3.2 in every test
+    year, including 2020, with the tightest interval of any rule.
+  - It kept a lift of about 2 on stocks that had *not* already fallen 30%, so it adds information beyond
+    momentum.
+  - It deserves its own fresh test on data after 2024, not adoption on this result.
+- **Two candidates failed outright.** R1, tail risk high relative to the stock's own past, and R3, a volatility
+  shock in a downtrend, did no better than chance. A stock's own volatility spikes tend to revert.
+- **R4 flagged fewer stock-dates on the test (4.1%) than on the design period (9.0%).** Its threshold is a
+  probability fitted when crashes were common (21% base rate, 2016–2018). In the calmer test years (6.3%) fewer
+  scores pass it. This was fixed in advance and is reported, not adjusted.
+- **Disappearances counted as crashes** (an upper bound): R4 2.49, momentum 1.92, R2 1.94, v1 1.14.
+
+Files: `case_studies/results/warnings_v2_design.csv`, `warnings_v2_model.json` (frozen before the test),
+`warnings_v2_test.csv`, `warnings_v2_bootstrap.csv`, `warnings_v2_incremental.csv`, `warnings_v2_yearly.csv`,
+`warnings_v2_decision.json`, and `warnings_v2_reference.json` (the NSE cross-section of 30 Jan 2026 that the app
+uses for R2 and R4). The rows are rebuilt by `scripts/run_universe.py --stage design` and then `--stage test`
+(14 minutes on 7 cores).
 
 ## Jump defaults: recalibrated on NSE-wide base rates (review M2)
 
@@ -183,10 +274,10 @@ Until October 2026 the overlay assumed 0.1% a day for Elevated (J = −10%) and 
 
 | Group | Falls of | Stock-dates | Jumps | Forward rate a day | Own trailing rate | **Excess p a day (90% range)** | Mean fall J |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| All stocks | ≥ 10% | 174,430 | 32,431 | 0.300% | 0.334% | −0.033% (−0.048% to −0.019%) | −16.1% |
-| All stocks | ≥ 20% | 174,430 | 3,878 | 0.036% | 0.035% | +0.001% (−0.005% to +0.006%) | −34.8% |
-| Elevated proxy | ≥ 10% | 64,865 | 20,574 | 0.529% | 0.616% | −0.087% (−0.131% to −0.050%) | −17.2% |
-| High proxy (BE/BZ) | ≥ 20% | 20,370 | 2,080 | 0.185% | 0.186% | −0.001% (−0.034% to +0.030%) | −34.2% |
+| All stocks | ≥ 10% | 174,532 | 32,473 | 0.301% | 0.336% | −0.035% (−0.051% to −0.021%) | −16.1% |
+| All stocks | ≥ 20% | 174,532 | 3,878 | 0.036% | 0.035% | +0.001% (−0.005% to +0.006%) | −34.8% |
+| Elevated proxy | ≥ 10% | 64,965 | 20,589 | 0.529% | 0.619% | −0.090% (−0.131% to −0.052%) | −17.2% |
+| High proxy (BE/BZ) | ≥ 20% | 20,391 | 2,080 | 0.185% | 0.186% | −0.001% (−0.032% to +0.028%) | −34.2% |
 
 **Result:** none of the groups jumps more often than its own past, so **the default extra probability is now 0 for both tiers**. J is −17% for Elevated and −34% for High, used whenever a probability is set. Event-adjusted ES therefore equals standard ES by default.
 - The Events page shows ES over a grid of p (0.01% to 1% a day, with the yearly equivalent) and J (−10% to −50%), so what an assumed event risk would add is visible.

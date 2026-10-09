@@ -298,3 +298,58 @@ def decide(test_table: pd.DataFrame, boot: pd.DataFrame, challenger: str) -> dic
               "beats (a) down ≥ 30%": bool(lift[challenger] > lift["drawdown_30"]),
               "90% CI of lift − lift(a) above zero": bool(b.loc[challenger, "Difference 5%"] > 0)}
     return {"challenger": challenger, "wins": all(checks.values()), "checks": checks}
+
+
+# ---------------------------------------------------------------
+# Live use in the app: one stock today, against the latest NSE cross-section
+# ---------------------------------------------------------------
+
+def reference_from(rows: pd.DataFrame, as_of) -> dict:
+    """
+    The cross-section R2 (and R4's r2_pct) need, from every NSE stock on one date: the liquidity tercile edges (log
+    median 60-day traded value) and, per tercile, ES95 at every percentile 0..100 and its 90th percentile.
+    """
+    ok = rows.dropna(subset=["es_today", "log_value60"])
+    edges = np.percentile(ok["log_value60"], [100 / 3, 200 / 3])
+    bucket = np.digitize(ok["log_value60"], edges)
+    tiers = []
+    for b in range(3):
+        es = ok.loc[bucket == b, "es_today"].to_numpy()
+        tiers.append({"stocks": int(len(es)), "es_percentiles": np.percentile(es, np.arange(101)).tolist(),
+                      "es_p90": float(np.percentile(es, PCT * 100))})
+    return {"as_of": str(pd.Timestamp(as_of).date()), "stocks": int(len(ok)), "edges": edges.tolist(), "tiers": tiers}
+
+
+def r2_from_reference(es_today: float, log_value60: float, reference: dict) -> tuple:
+    """(percentile rank within the tercile, R2 flag) against a stored cross-section; (NaN, NaN) if inputs are missing."""
+    if not (np.isfinite(es_today) and np.isfinite(log_value60)):
+        return np.nan, np.nan
+    tier = reference["tiers"][int(np.digitize(log_value60, reference["edges"]))]
+    pct = float(np.interp(es_today, tier["es_percentiles"], np.arange(101)) / 100)
+    return pct, float(es_today >= tier["es_p90"])
+
+
+def assess(frame: pd.DataFrame, market: pd.Series, model: dict, reference: dict, flag_rules: dict, rules: dict,
+           position_value: float = 1e7) -> dict:
+    """
+    v1 market flag, every v2 rule and baseline (a) for one stock on its last row, from its own adjusted prices
+    (Date, OHLC, Volume, Returns, value) and the benchmark's daily returns. Uses case_studies.engine.price_flags, so
+    the inputs are exactly those of the wider test.
+    """
+    from case_studies import engine as K
+    frame = frame.reset_index(drop=True)
+    if len(frame) < ES_MIN_ROWS:
+        return {"available": False, "note": f"only {len(frame)} days of prices (250 needed)"}
+    w = frame.tail(K.LOOKBACK_DAYS).reset_index(drop=True)
+    pf = K.price_flags(w, market[market.index <= frame["Date"].iloc[-1]], position_value, flag_rules, rules)
+    es = daily_es_series(frame["Returns"])
+    f = stock_features(frame, len(frame) - 1, es, pf["band"])
+    f["r2_pct"], f["flag_r2"] = r2_from_reference(f["es_today"], f["log_value60"], reference)
+    f.update(ewma_vol_ratio=pf["ewma_vol_ratio"], stress_loss=pf["stress_loss"], as_of=frame["Date"].iloc[-1])
+    row = pd.DataFrame([f])
+    row = add_r4(add_r3(row), model)
+    out = row.iloc[0].to_dict()
+    base = K.baselines(frame, frame["Date"].iloc[-1])
+    out.update(available=True, flag_market=bool(pf["flags"]["market"]), flag_drawdown_30=base["flags"]["drawdown_30"],
+               es_hist=pf["es_hist"])
+    return out

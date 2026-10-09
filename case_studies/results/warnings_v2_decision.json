@@ -1,0 +1,10 @@
+{
+  "challenger": "r4",
+  "wins": false,
+  "checks": {
+    "beats v1 any price flag": true,
+    "beats v1 market flag": true,
+    "beats (a) down \u2265 30%": true,
+    "90% CI of lift \u2212 lift(a) above zero": false
+  }
+}

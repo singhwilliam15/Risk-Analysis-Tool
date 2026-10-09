@@ -39,6 +39,19 @@ def test_single_stock_mode(fake_market):
     assert len(models) == 8 and "GARCH(1,1)-t" in models.index
 
 
+def test_market_page_shows_the_early_warning_record(fake_market):
+    """The rule in use, its tested lift (from case_studies/results) and whether it fires for an NSE holding."""
+    at = run_app()
+    assert_clean(at)
+    assert any("Early warning" in m.value for m in at.markdown)
+    assert any("In use:" in c.value and "pre-registered" in c.value.lower() for c in at.caption)
+    table = next(d.value for d in at.dataframe if "v1 market flag" in d.value.columns)
+    assert table["Holding"].tolist() == ["ASIANPAINT.NS"]
+    us = run_app(**{"Quick Preset Ticker": "Apple (US)"})
+    assert_clean(us)
+    assert any("tested on NSE stocks only" in i.value for i in us.info)
+
+
 def test_single_stock_long_history_multi_day(fake_market):
     at = run_app(**{"Historical Lookback Window": "5y", "Holding Period (Days)": 10})
     at.sidebar.select_slider[0].set_value(0.975)
