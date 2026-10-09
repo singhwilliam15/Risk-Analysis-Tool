@@ -153,3 +153,8 @@ def test_jump_base_rates_recover_a_known_rate():
     assert row["Own trailing rate a day"] == pytest.approx(0.01, abs=0.004)
     assert abs(row["Excess p a day"]) < 0.004  # no excess: the stock's own history already has these jumps
     assert row["Mean fall J"] == pytest.approx(-0.25, abs=0.02)
+    # Warnings v2: the rolling ES series equals the v1 flag's ES on every as-of row, and the trough is in the window
+    assert np.allclose(results["es_today"], results["es_hist"], rtol=1e-12)
+    assert ((results["trough_days"] >= 1) & (results["trough_days"] <= results["future_days"])).all()
+    late = results[results["as_of"] >= pd.Timestamp("2019-06-01")]
+    assert late["r1_pct"].notna().all() and results["r1_pct"].isna().any()  # R1 needs 500 prior ES values

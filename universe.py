@@ -175,7 +175,9 @@ def evaluate_symbol(symbol: str, frame: pd.DataFrame, market: pd.Series, as_of_d
                     rules: dict, panel_end) -> list:
     """Every month-end row for one stock: flags, baselines, the 12-month outcome and the jump counts."""
     from case_studies import engine as K
+    import warnings_v2 as W
     rows = []
+    es_daily = W.daily_es_series(frame["Returns"])  # one rolling series per stock for the v2 rules (Phase F)
     dates = frame["Date"]
     mkt_dates = market.index
     last_trade = dates.iloc[-1]
@@ -222,6 +224,9 @@ def evaluate_symbol(symbol: str, frame: pd.DataFrame, market: pd.Series, as_of_d
             row[f"fwd_jumps_{tag}"] = int(f_mask.sum())
             row[f"fwd_jump_size_sum_{tag}"] = float(fwd["Returns"].to_numpy()[f_mask].sum())
             row[f"trail_jumps_{tag}"] = int(jump_days(w["Returns"].to_numpy(), m_trail, thr).sum())
+        # Warnings v2 (Phase F): raw features from rows up to the as-of date, and the trough's position
+        row.update(W.stock_features(frame, len(upto) - 1, es_daily, pf["band"]))
+        row["trough_days"] = int(np.argmin(fut["Close"].to_numpy()) + 1) if len(fut) else np.nan
         rows.append(row)
     return rows
 
