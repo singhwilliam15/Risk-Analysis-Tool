@@ -111,7 +111,8 @@ def test_case_config_is_consistent():
 
 def test_committed_results_match_the_documented_tally():
     tally = pd.read_csv(K.ROOT / "results" / "tally.csv").set_index("Pillar")
-    assert tally.loc["any", "Hits"] == 15 and tally.loc["any", "Case dates"] == 20
-    assert tally.loc["any", "False positives"] == 19 and tally.loc["any", "Control dates"] == 200
+    assert tally.loc["any", "Hits"] == 19 and tally.loc["any", "Case dates"] == 24  # DHFL priced since Phase G
+    assert tally.loc["any", "False positives"] == 22 and tally.loc["any", "Control dates"] == 240
+    assert tally.loc["events", "Case dates"] == 4 and tally.loc["events", "False positives"] == 0  # Adani only
     text = (K.ROOT.parent / "docs" / "case_studies.md").read_text(encoding="utf-8")
-    assert "**15 (75%)**" in text and "**19 (9.5%)**" in text
+    assert "**19 (79%)**" in text and "**22 (9.2%)**" in text

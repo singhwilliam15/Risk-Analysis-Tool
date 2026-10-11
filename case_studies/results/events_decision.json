@@ -1,0 +1,41 @@
+{
+  "jump_default": {
+    "High": {
+      "p": 0.0,
+      "J": -0.40444307254414735
+    },
+    "Elevated": {
+      "p": 0.0,
+      "J": -0.13096918642875957
+    }
+  },
+  "readings": {
+    "e1": {
+      "warns": true,
+      "beats momentum": false,
+      "adds information beyond momentum": true
+    },
+    "e2": {
+      "warns": true,
+      "beats momentum": false,
+      "adds information beyond momentum": true
+    },
+    "e3": {
+      "warns": true,
+      "beats momentum": false,
+      "adds information beyond momentum": true
+    },
+    "e3p": {
+      "warns": true,
+      "beats momentum": false,
+      "adds information beyond momentum": true
+    }
+  },
+  "coverage": {
+    "filings": 27033,
+    "companies": 2165,
+    "unmatched_filings": 169,
+    "stock_dates_primary": 49273,
+    "with_a_filing_primary": 0.9865849451017799
+  }
+}

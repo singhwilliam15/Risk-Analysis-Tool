@@ -26,16 +26,17 @@ It's a risk tool for Indian and US stocks and portfolios, in Python and Streamli
 
 **3. Testing it honestly (40 seconds)**
 
-I ran it before five Indian collapses using only data public at the time. It warned on 15 of 20 dates. Yes Bank was
+I ran it before five Indian collapses using only data public at the time. It warned on 19 of 24 dates. Yes Bank was
 inside RBI's first PCA threshold six months before its moratorium.
 
-Then I checked it against simple rules. "Price below its 200-day average" also caught 15 of 20, with three times
+Then I checked it against simple rules. "Price below its 200-day average" also caught 18 of 24, with nearly three times
 the false alarms, so my edge there is precision. On every NSE stock from 2016 to 2024, delisted ones included, my
 price flags barely beat chance: one tail-risk threshold, set with large caps in mind, fires on 72% of all NSE stock-days. "Down 30% in six months"
 did twice as well. I reported that rather than re-tuning after the fact. Then I tested four new rules the way a
 researcher would: I wrote down the rules and the pass mark first, designed on 2016–18 and tested once on 2020–24.
 The best one scored higher than momentum, but not by a margin the test could confirm, so the app still uses the old
-flag and says so.
+flag and says so. I did the same for promoter pledges, on 27,000 NSE shareholding filings: they warn, and they
+catch risky stocks whose price hasn't moved yet, but they still don't beat momentum.
 
 **4. What I changed because of the evidence (20 seconds)**
 

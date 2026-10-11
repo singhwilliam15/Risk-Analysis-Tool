@@ -2,16 +2,19 @@
 
 The tool was run **as of 12, 6, 3 and 1 month(s) before** each collapse. Each run used only data public on that date: prices up to the date, statements public by then, and disclosures by their public dates. The results are compared with what happened next, and with a control group of 10 large, stable NSE stocks at the same dates. Run it with `python case_studies/run.py`; results go to `case_studies/results/`.
 
-**Coverage (3 Oct 2026).** Market, liquidity, integrated stress and **credit** are assessed.
+**Coverage (11 Oct 2026).** Market, liquidity, integrated stress and **credit** are assessed for every case; **events** where NSE's history reaches.
 - **Credit** runs on consolidated statements transcribed from each company's annual report on NSE: Zee FY2017–18, Jet Airways FY2017–18, Future Retail FY2019 and Adani Enterprises FY2021–22, in `case_studies/data/fundamentals/`. Each figure gives its report URL and PDF page. Every year ties exactly (total assets = equity + liabilities), and the filing date is the annual report's NSE filing date (point in time). Yes Bank and DHFL are financials, which Merton does not model.
-- **Events still show not available**, never "no risk". NSE's shareholding API returns only about the last 20 quarters (back to September 2021), its rating feed starts later still, and surveillance lists show today's stage only. The 2017–2020 disclosures these cases need remain on the checklist below.
+- **DHFL** has prices since October 2026, from NSE's own daily bhavcopies, adjusted as in the wider test (`scripts/build_case_prices.py`), because Yahoo has dropped it.
+- **Events** use NSE's shareholding history, Sep 2021 – Dec 2024 (see the wider event test below). That covers Adani Enterprises and the controls on Adani's dates.
+  - The 2017–2020 cases stay **not available**, never "no risk". NSE serves no shareholding XBRL before September 2021, BSE refuses scripted downloads, and collecting the pages by hand was not done.
+  - The figures are "pledged or otherwise encumbered", the only measure filed before mid-2025.
 
 ## Cases
 
 | Case | Event date | Event | Prices |
 | --- | --- | --- | --- |
 | Yes Bank | 5 Mar 2020 | RBI places Yes Bank under a moratorium and supersedes its board | Yahoo |
-| DHFL | 4 Jun 2019 | DHFL misses interest payments on its bonds | **not available** (delisted; Yahoo returns 404). Needs an NSE price file |
+| DHFL | 4 Jun 2019 | DHFL misses interest payments on its bonds | NSE bhavcopies, adjusted (delisted; Yahoo returns 404) |
 | Zee Entertainment | 25 Jan 2019 | Share price collapses on promoter-pledge and lender concerns | Yahoo |
 | Adani Enterprises | 24 Jan 2023 | Hindenburg Research publishes its short-seller report | Yahoo |
 | Jet Airways | 17 Apr 2019 | Jet Airways suspends all flights | Yahoo |
@@ -57,7 +60,10 @@ At each as-of date, using the last 500 trading days up to it:
 | Future Retail | 6m (29 Feb 2020) | 4.6% (EWMA, B) | none | no | −79% |
 | Future Retail | 3m (29 May 2020) | 12.3% (FHS, B) | market, **liquidity** (26 lower-circuit days, longest run 18), stress | **yes** | −20% |
 | Future Retail | 1m (29 Jul 2020) | 12.1% (FHS, B) | market, **liquidity** (37 lower-circuit days), stress | **yes** | −39% |
-| DHFL | all | not available (no prices) | – | – | – |
+| DHFL | 12m (4 Jun 2018) | 3.9% (GARCH-t, B) | market (ES95 5.2%), stress | **yes** | −93% |
+| DHFL | 6m (4 Dec 2018) | 8.7% (GARCH-t, C) | market, stress | **yes** | −82% |
+| DHFL | 3m (4 Mar 2019) | 9.6% (GARCH-t, C) | market, stress | **yes** | −69% |
+| DHFL | 1m (4 May 2019) | 10.3% (GARCH-t, A) | market, stress | **yes** | −72% |
 
 ES is 1-day at 95% for the recommended model, with the Trust grade. Since the October 2026 review fix the recommended model must also pass the ES test. At three dates (Yes Bank 6m, Future Retail 3m and 1m) EWMA had been recommended while failing it, at grade D; FHS replaces it with a 27–50% higher ES. The warnings do not use the grade, so the tally is unchanged. The 90% ranges are in `case_studies/results/results.csv`.
 
@@ -67,12 +73,12 @@ ES is 1-day at 95% for the recommended model, with the Trust grade. Since the Oc
 
 | Pillar | Case dates | Hits | Misses | Control dates | False positives |
 | --- | --- | --- | --- | --- | --- |
-| Market | 20 | 15 | 5 | 200 | 15 (7.5%) |
-| Liquidity (circuits) | 20 | 2 | 18 | 200 | 0 |
-| Credit | 20 | 12 (60%) | 8 | 17 | 0 (HDFC Bank, PCA; no statements for the other controls) |
-| Events | 0 | – | – | 0 | – (not available) |
-| Integrated stress | 20 | 6 | 14 | 200 | 4 (2.0%) |
-| **Any warning** | **20** | **15 (75%)** | **5** | **200** | **19 (9.5%)** |
+| Market | 24 | 19 | 5 | 240 | 16 (6.7%) |
+| Liquidity (circuits) | 24 | 2 | 22 | 240 | 0 |
+| Credit | 20 | 12 (60%) | 8 | 20 | 0 (HDFC Bank, PCA; no statements for the other controls; DHFL, an NBFC, not modelled) |
+| Events | 4 (Adani) | 0 | 4 | 34 | 0 (pledge history from Sep 2021 only) |
+| Integrated stress | 24 | 10 | 14 | 240 | 6 (2.5%) |
+| **Any warning** | **24** | **19 (79%)** | **5** | **240** | **22 (9.2%)** |
 
 ### What this shows, honestly
 
@@ -81,44 +87,46 @@ ES is 1-day at 95% for the recommended model, with the Trust grade. Since the Oc
 - **Zee was missed for a year, and Future Retail for six months.** Their volatility looked ordinary until shortly before the end, while a holder at the 12-month date went on to lose 46% (Zee) and 84% (Future Retail).
   - Zee's risk was in promoter pledges, and Future Retail's in group debt and pledges.
   - **Credit did not catch them** (October 2026, statements loaded): Zee's DD was 15–18 with Z'' safe at every date, and Future Retail's DD was 7–9 at 12 and 6 months. Credit warned on 9 of 16 dates (Jet Airways at every date on negative equity, Adani from 6 months on Z'' only, Future Retail at 3 and 1 months after the COVID crash), but **added no warning the price pillars had not already given**.
-  - Events are the pillar for Zee, but NSE serves pledge history only back to September 2021, so they still cannot be scored here.
+  - Events are the pillar for Zee, but NSE serves pledge history only back to September 2021, so they still cannot be scored here (the wider event test below scores them on 2021–2024 instead).
 - **Future Retail is where the liquidity pillar earned its place.** By May 2020 the stock had hit its 5% lower circuit on 26 days, including a run of 18 in a row. The circuit flag fired at 3 and 1 months, and the integrated stress showed a 70% loss on a −20% market move. A VaR model alone sees a volatile stock; the circuit history shows a holder who could not sell.
-- **Adani Enterprises "warned" because it was always volatile, not because of an early signal.** Its ES was above 5% at every date, and the 12-month window includes the March 2020 crash.
-- **False positives were 9.5% overall (19 of 200).** Most share one artefact: after March 2020, every 2-year window contains the COVID crash, so large caps' ES passes the 5% threshold. Examples are Reliance, Infosys and Kotak at the Future Retail dates, and Reliance and Kotak in January 2022. The others were volatility jumps in large caps not followed by large losses, plus 4 integrated-stress flags on Reliance, whose high downside beta makes a −20% market move cost about 30%.
+- **Adani Enterprises "warned" because it was always volatile, not because of an early signal.** Its ES was above 5% at every date, and the 12-month window includes the March 2020 crash. **The events pillar, now with NSE data, stayed Low on all 4 dates:** encumbrance was 2–4% of promoter holding. The Hindenburg report was not about pledges.
+- **DHFL warned at every date from 12 months out** (market and integrated stress). By June 2018 its ES95 was already 5.2%, and a −20% market move cost 44% through the linked engine. The 21 Sep 2018 crash (−42% in a day) came three months later. As with Yes Bank, the price was already showing stress; the bond default a year later was not forecast as such.
+- **False positives were 9.2% overall (22 of 240).** DHFL's dates added three: HDFC Bank in June 2018 (a volatility jump), and Reliance in March and May 2019 (integrated stress, from its high downside beta). Most of the others share one artefact: after March 2020, every 2-year window contains the COVID crash, so large caps' ES passes the 5% threshold. Examples are Reliance, Infosys and Kotak at the Future Retail dates, and Reliance and Kotak in January 2022. The others were volatility jumps in large caps not followed by large losses, plus 4 integrated-stress flags on Reliance, whose high downside beta makes a −20% market move cost about 30%.
   - A rule that adapts to the market's own ES would cut these. I have not changed the rule after seeing the results, to avoid fitting the test.
-- **Small sample.** Twenty case dates from five stocks illustrate what the tool can and cannot see; they are not statistically meaningful.
+- **Small sample.** Twenty-four case dates from six stocks illustrate what the tool can and cannot see; they are not statistically meaningful.
 
 ### Does it beat a naive rule? (review M1)
 
-Three rules anyone could apply, fixed before the run exactly as the review states them, on the same 220 dates and using only prices up to each date (`case_studies/engine.py::baselines`):
+Three rules anyone could apply, fixed before the run exactly as the review states them, on the same 264 dates and using only prices up to each date (`case_studies/engine.py::baselines`):
 - (a) the stock is down **30% or more over the previous 6 months** (126 trading days);
 - (b) its **60-day volatility is in the top decile** of its own rolling 60-day volatility over the previous 5 years (at least 500 values needed, otherwise "not available");
 - (c) it closes **below its 200-day average**.
 
-| Rule | Hits (of 20) | False positives (of 200) | Cases warned at some date (of 5) | Mean earliest warning |
+| Rule | Hits (of 24) | False positives (of 240) | Cases warned at some date (of 6) | Mean earliest warning |
 | --- | --- | --- | --- | --- |
-| **Tool: any warning** | **15 (75%)** | **19 (9.5%)** | **5** | **8.0 months before** |
-| (a) Down ≥ 30% in 6 months | 7 (35%) | 0 (0%) | 3 | 7.0 |
-| (b) Volatility in own top decile | 7 (35%) | 27 (13.5%) | 4 | 4.75 |
-| (c) Below 200-day average | 15 (75%) | 55 (27.5%) | 4 | 10.5 |
-| Any baseline | 15 (75%) | 71 (35.5%) | 4 | 10.5 |
+| **Tool: any warning** | **19 (79%)** | **22 (9.2%)** | **6** | **8.7 months before** |
+| (a) Down ≥ 30% in 6 months | 9 (38%) | 0 (0%) | 4 | 6.75 |
+| (b) Volatility in own top decile | 10 (42%) | 29 (12.1%) | 5 | 5.0 |
+| (c) Below 200-day average | 18 (75%) | 60 (25.0%) | 5 | 9.6 |
+| Any baseline | 18 (75%) | 78 (32.5%) | 5 | 9.6 |
 
 Earliest warning per case, in months before the event (– = never warned):
 
-| Rule | Yes Bank | Zee | Adani Ent. | Jet Airways | Future Retail |
-| --- | --- | --- | --- | --- | --- |
-| Tool: any warning | 12 | 1 | 12 | 12 | 3 |
-| (a) Down ≥ 30% | 12 | – | – | 6 | 3 |
-| (b) Volatility top decile | 12 | 1 | – | 3 | 3 |
-| (c) Below 200-day average | 12 | 6 | – | 12 | 12 |
+| Rule | Yes Bank | DHFL | Zee | Adani Ent. | Jet Airways | Future Retail |
+| --- | --- | --- | --- | --- | --- | --- |
+| Tool: any warning | 12 | 12 | 1 | 12 | 12 | 3 |
+| (a) Down ≥ 30% | 12 | 6 | – | – | 6 | 3 |
+| (b) Volatility top decile | 12 | 6 | 1 | – | 3 | 3 |
+| (c) Below 200-day average | 12 | 6 | 6 | – | 12 | 12 |
 
 What this says, plainly:
-- **The tool does not catch more cases than the simplest trend rule.** "Below its 200-day average" also hits 15 of 20 case dates.
-- **It gets there with far fewer false alarms:** 9.5% of control dates against 27.5% for the 200-day rule and 35.5% for any baseline. On these dates the tool's value is precision, not extra recall.
+- **The tool catches about as much as the simplest trend rule.** It hits 19 of 24 case dates; "below its 200-day average" hits 18.
+- **It gets there with far fewer false alarms:** 9.2% of control dates against 25.0% for the 200-day rule and 32.5% for any baseline. On these dates the tool's value is precision, not extra recall.
 - **The 200-day rule warned earlier on two cases the tool was late on:** Zee at 6 months (the tool only at 1 month) and Future Retail at 12 months (the tool at 3). A falling price was the earliest public sign there, and the tool's volatility-based market rule did not react to a slow decline.
-- **The tool's only case no baseline saw is Adani Enterprises**, and that "warning" is its permanently high volatility (ES above 5%), not an early signal (see above). Excluding it, every case the tool caught at some date was also caught by a baseline.
-- **"Down 30% in 6 months" never fired on a control** but caught only 7 of 20 case dates: precise and late.
-- **20 case dates from 5 stocks cannot separate these rules statistically.** The wider test below uses the whole NSE universe for that.
+- **DHFL is the one case where the tool warned earlier than every baseline:** 12 months out, against 6 for all three. Its ES was already above 5% while the price had not yet fallen 30% or crossed its 200-day average.
+- **The only case no baseline saw is Adani Enterprises**, and that "warning" is its permanently high volatility (ES above 5%), not an early signal (see above).
+- **"Down 30% in 6 months" never fired on a control** but caught only 9 of 24 case dates: precise and late.
+- **24 case dates from 6 stocks cannot separate these rules statistically.** The wider test below uses the whole NSE universe for that.
 
 Full rows: `case_studies/results/tally.csv` (pillars and baselines), `lead_times.csv` (earliest warning per case), `results.csv` (every date).
 
@@ -261,6 +269,91 @@ Files: `case_studies/results/warnings_v2_design.csv`, `warnings_v2_model.json` (
 uses for R2 and R4). The rows are rebuilt by `scripts/run_universe.py --stage design` and then `--stage test`
 (14 minutes on 7 cores).
 
+## Wider event test: every NSE stock, 2021–2024 (October 2026)
+
+The event pillar had never been tested: the case-study disclosures were missing, and NSE's pledge history starts in
+2021. This test uses what NSE *does* serve. That is every company's quarterly shareholding-pattern XBRL from
+**Sep 2021 to Dec 2024**: 27,033 filings from 2,165 companies, each the quarter's original filing, public from its
+broadcast date (`scripts/fetch_shareholding_history.py`). The rules, windows, metrics and readings were fixed in
+[docs/preregistration_events.md](preregistration_events.md) before any result was computed.
+
+**What the data can and cannot measure:**
+- **It measures encumbrance, not pledges.** Until mid-2025 the filings report shares "pledged *or otherwise
+  encumbered*", which includes non-disposal undertakings, so it is an upper bound on pledges. Jaiprakash Power was
+  94.6% encumbered in Sep 2022 and 72.99% pledged in 2025; TCS is 0.48% encumbered with no pledges.
+- **Pledges and circuits are the only signals with history.** NSE's rating feed returns nothing for these years,
+  and the surveillance lists are current only. So the tier here uses only the pledge signal and lower-circuit days.
+- **Sep 2021 filings count from January 2022.** NSE broadcast their XBRL about 84 days after submission, and the
+  broadcast date is used.
+- **Coverage:** 98.7% of stock-dates have a filing; 140 filings could not be downloaded (HTTP 404), and 21
+  companies' filings match no traded stock.
+- **One data bug was fixed before any result was computed:** NSE's list leaves the ISIN blank for 77 companies,
+  Reliance among them (pre-registration amendment 1).
+
+**The rules:**
+- **E1:** encumbered ≥ 50% of promoter holding.
+- **E2:** encumbrance up ≥ 10 pp in four quarters.
+- **E3:** event tier Elevated or High, from pledges and circuits.
+- **E3p:** the same tier from pledges alone.
+
+**Primary window,** month-ends Oct 2022 – Dec 2024: 49,244 stock-dates, base rate 6.2%. The 90% ranges come from a
+paired block bootstrap over runs of 12 month-ends.
+
+| Rule | Flagged | Precision | Recall | **Lift (90% range)** | **Among stocks not down 30%: lift (90% range)** |
+| --- | --- | --- | --- | --- | --- |
+| E1 encumbered ≥ 50% | 5.6% | 11.8% | 10.6% | **1.89 (1.60–2.24)** | **1.86 (1.52–2.15)** |
+| E2 up ≥ 10 pp in 4 quarters | 2.1% | 12.1% | 4.0% | 1.95 (1.74–2.52) | 1.72 (1.51–2.06) |
+| E3 event tier (pledges + circuits) | 40.3% | 10.3% | 66.8% | 1.66 (1.62–1.77) | 1.66 (1.62–1.77) |
+| E3p event tier (pledges alone) | 10.8% | 11.3% | 19.5% | 1.81 (1.76–2.03) | 1.80 (1.71–1.96) |
+| (a) Down ≥ 30% in 6 months | 5.0% | 14.9% | 12.1% | **2.40 (2.09–3.37)** | – |
+| (b) Volatility in own top decile | 5.1% | 9.2% | 7.5% | 1.47 (1.22–1.85) | 1.55 (1.28–1.90) |
+| v1 any price flag | 73.0% | 7.8% | 91.3% | 1.25 (1.23–1.28) | 1.26 (1.24–1.28) |
+| R2 peer-relative ES (Phase F, exploratory) | 10.1% | 13.1% | 21.1% | 2.10 (1.90–2.66) | 2.07 (1.88–2.61) |
+
+**Lift by year:**
+
+| Year | E1 | E2 | E3 | (a) momentum | v1 |
+| --- | --- | --- | --- | --- | --- |
+| 2022 (Oct–Dec) | 3.21 | 1.72 | 1.87 | 5.00 | 1.23 |
+| 2023 | 1.93 | 3.43 | 1.81 | 4.11 | 1.29 |
+| 2024 | 1.89 | 1.81 | 1.64 | 2.49 | 1.28 |
+
+**Verdict, plainly, read as pre-registered:**
+- **The pledge signals warn.** Every event rule's lift interval lies above 1. A stock whose promoters had encumbered
+  half or more of their shares fell 50% or more within a year about 1.9 times as often as the average stock.
+- **They do not beat momentum.** "Down 30% in 6 months" has a lift of 2.40. The interval of every event rule's lift
+  minus momentum's lies entirely below zero.
+- **They add information that momentum does not have.** Among stocks that had *not* already fallen 30%, E1 still has
+  a lift of 1.86 (1.52–2.15), and every event rule's interval stays above 1. Pledges flag a different set of risky
+  stocks: those whose price has not yet moved.
+- **On liquid stocks the event tier does about as well as momentum.** E3's lift is 2.09 (1.99–2.37) against
+  momentum's 1.93 (1.65–2.70). This is a secondary view, not the pre-registered test.
+- **Two cautions:**
+  - the window has only 27 month-ends, so the intervals rest on few independent blocks;
+  - the circuit rule makes E3 fire on 40% of stock-dates. Pledges alone (E3p) are more selective, at 10.8% with a
+    similar lift.
+- **The case-study test of events is limited to Adani Enterprises,** the only case after 2021. Its promoters'
+  encumbrance was 2–4% before the Hindenburg report, so the tier stayed Low on all 4 dates. That is a miss, and an
+  honest one: the report was about governance and valuation, not pledged shares. The 34 control dates with data
+  were all Low (no false positives).
+
+Files: `case_studies/results/events_test.csv`, `events_bootstrap.csv`, `events_incremental.csv`,
+`events_incremental_bootstrap.csv`, `events_yearly.csv`, `events_jumps.csv`, `events_decision.json`; data in
+`data/disclosures/history/`.
+
+**Jump overlay, re-tested on the event tiers (pre-registered rule: set a default only if the excess rate's 5th
+percentile is above zero):**
+
+| Group | Falls of | Stock-dates | Jumps | Forward rate a day | Own trailing rate | Excess p a day (90% range) | Mean fall J |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| High: E1 encumbered ≥ 50% | ≥ 20% | 3,858 | 9 | 0.004% | 0.014% | −0.010% (−0.026% to +0.002%) | −40% |
+| Elevated: E3 but not E1 | ≥ 10% | 25,417 | 2,817 | 0.182% | 0.269% | −0.087% (−0.149% to −0.029%) | −13% |
+
+**Neither tier shows more stock-specific crashes than the stock's own past, so both defaults stay 0.** The base
+model already carries the history of these stocks' falls. This now holds on disclosure-based tiers as well as on
+the price-based proxies above, but only for 2021–2024. That period had no collapse on the scale of Zee or DHFL among
+heavily pledged companies.
+
 ## Jump defaults: recalibrated on NSE-wide base rates (review M2)
 
 Until October 2026 the overlay assumed 0.1% a day for Elevated (J = −10%) and 0.5% a day for High (J = −20%). Those are **22% and 72% chances of at least one such jump a year**. They were "confirmed" on warned dates in the crash-selected case set above, which is circular: those dates were chosen because the stocks collapsed.
@@ -282,7 +375,7 @@ Until October 2026 the overlay assumed 0.1% a day for Elevated (J = −10%) and 
 **Result:** none of the groups jumps more often than its own past, so **the default extra probability is now 0 for both tiers**. J is −17% for Elevated and −34% for High, used whenever a probability is set. Event-adjusted ES therefore equals standard ES by default.
 - The Events page shows ES over a grid of p (0.01% to 1% a day, with the yearly equivalent) and J (−10% to −50%), so what an assumed event risk would add is visible.
 - The sidebar takes any p.
-- **Limit:** these proxies are price-based. A stock flagged on prices has already shown its falls, so the base model has seen them. The tiers that matter most come from **disclosures** (pledges, rating downgrades, auditor resignations) for stocks whose prices still look calm, like Zee in 2018. Their base rate cannot be measured here: NSE's pledge history starts in September 2021, and ratings are not archived for every company. Zero is the honest default until such data exist; it is not proof that pledged stocks carry no extra jump risk.
+- **Limit:** these proxies are price-based. A stock flagged on prices has already shown its falls, so the base model has seen them. The tiers that matter most come from **disclosures** (pledges, rating downgrades, auditor resignations) for stocks whose prices still look calm, like Zee in 2018. Their base rate could not be measured here. It was measured afterwards on NSE's 2021–2024 shareholding history, and also showed no excess (see the [wider event test](#wider-event-test-every-nse-stock-20212024-october-2026)), so zero stays. That evidence covers 2021–2024 only.
 
 ### Before the recalibration: what the case dates showed
 
@@ -300,13 +393,13 @@ Observed one-day falls over the 63 trading days after each as-of date, from the 
 - **Large caps had falls of 10% too.** Control stocks without a warning saw them on 0.20% of days, mostly in March 2020. The GARCH-t base distribution already carries such market-wide crashes; the jump overlay is meant for stock-specific events on top.
 - **Superseded** by the NSE-wide calibration above (October 2026).
 
-## Checklist of official files to download
+## Checklist of official files (not collected)
 
-Put each file where the last column says, add disclosure files to `case_studies/data/disclosures/manifest.json` (source URL and download date), and rerun. Each link is the official landing page: search the company and period there. The deep links for specific filings were not verified, so none is given.
+These pre-2021 disclosures are what would let the events pillar be scored on Zee, Jet Airways, Future Retail, DHFL and Yes Bank. NSE serves no shareholding XBRL before September 2021, and BSE refuses scripted downloads (HTTP 403). In October 2026 it was decided not to collect them by hand, so those cases stay "events: not available". DHFL's prices are now built from NSE's bhavcopies, and Adani's pledge quarters from NSE's 2021–2024 history. To add the rest later, put each file where the last column says, add disclosure files to `case_studies/data/disclosures/manifest.json` (source URL and download date), and rerun. Each link is the official landing page: search the company and period there. The deep links for specific filings were not verified, so none is given.
 
 | Case | File | Period | Official source | Save as | Status |
 | --- | --- | --- | --- | --- | --- |
-| DHFL | Daily prices and volume (security-wise price-volume archive) | Jan 2016 – Sep 2019 | [NSE historical data](https://www.nseindia.com/report-detail/eq_security) | `case_studies/data/prices/DHFL.csv` |
+| DHFL | Daily prices and volume (security-wise price-volume archive) | Jan 2016 – Sep 2019 | [NSE historical data](https://www.nseindia.com/report-detail/eq_security) | `case_studies/data/prices/DHFL.csv` | **done** (October 2026, from the bhavcopies) |
 | DHFL | Promoter pledged data | Mar 2017 – Jun 2019 quarters | [NSE pledged data](https://www.nseindia.com/companies-listing/corporate-filings-pledged-data) | `case_studies/data/disclosures/` (pledges) |
 | DHFL | Credit rating rationales (all actions) | 2018 – 2019 | [CARE Ratings](https://www.careratings.com) | `case_studies/data/disclosures/` (ratings) |
 | DHFL | Credit rating rationales | 2018 – 2019 | [ICRA](https://www.icra.in) | `case_studies/data/disclosures/` (ratings) |
@@ -322,7 +415,7 @@ Put each file where the last column says, add disclosure files to `case_studies/
 | Zee Entertainment | F&O ban files (daily) | Jan 2018 – Jan 2019 | [NSE derivatives reports](https://www.nseindia.com/all-reports-derivatives) | `case_studies/data/disclosures/` (fo_ban) |
 | Zee Entertainment | Annual statements (consolidated) | FY2016 – FY2018 | [NSE annual reports](https://www.nseindia.com/companies-listing/corporate-filings-annual-reports) | `case_studies/data/fundamentals/ZEEL.NS.csv` | **done** (October 2026; years needed by the case dates) |
 | Zee Entertainment | Credit rating rationales | 2018 – 2019 | [CARE Ratings](https://www.careratings.com) | `case_studies/data/disclosures/` (ratings) |
-| Adani Enterprises | Promoter pledged data | Dec 2020 – Dec 2022 quarters | [NSE pledged data](https://www.nseindia.com/companies-listing/corporate-filings-pledged-data) | `case_studies/data/disclosures/` (pledges) |
+| Adani Enterprises | Promoter pledged data | Dec 2020 – Dec 2022 quarters | [NSE pledged data](https://www.nseindia.com/companies-listing/corporate-filings-pledged-data) | `case_studies/data/disclosures/` (pledges) | **done from Sep 2021** (NSE XBRL history; Dec 2020 – Jun 2021 not served) |
 | Adani Enterprises | ASM / GSM lists in force | Jan 2022 – Jan 2023 | [NSE surveillance](https://www.nseindia.com/reports/asm) | `case_studies/data/disclosures/` (surveillance) |
 | Adani Enterprises | Annual statements (consolidated) | FY2020 – FY2022 | [NSE annual reports](https://www.nseindia.com/companies-listing/corporate-filings-annual-reports) | `case_studies/data/fundamentals/ADANIENT.NS.csv` | **done** (October 2026; years needed by the case dates) |
 | Adani Enterprises | Credit rating rationales | 2021 – 2023 | [CARE Ratings](https://www.careratings.com) | `case_studies/data/disclosures/` (ratings) |

@@ -18,10 +18,10 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
 | --- | --- | --- |
 | [![CRO dashboard](docs/images/cro-dashboard.png)](docs/images/cro-dashboard.png) | [![Integrated stress](docs/images/integrated-stress.png)](docs/images/integrated-stress.png) | [![HDFC Bank against RBI's PCA triggers](docs/images/credit-panel.png)](docs/images/credit-panel.png) |
 
-## Five findings, including the negative ones
+## Six findings, including the negative ones
 
-1. **On 20 dates before five Indian collapses, it warned on 15, with false alarms on 9.5% of 200 control dates.**
-   But "price below its 200-day average" also warned on 15. It did so with 27.5% false alarms, and earlier on Zee
+1. **On 24 dates before six Indian collapses, it warned on 19, with false alarms on 9.2% of 240 control dates.**
+   But "price below its 200-day average" also warned on 18. It did so with 25% false alarms, and earlier on Zee
    and Future Retail. The tool's edge on these dates is precision, not catching more.
    [Case studies](docs/case_studies.md#does-it-beat-a-naive-rule-review-m1)
 2. **On every NSE stock from 2016 to 2024 (2,315 stocks, delisted ones included), the price flags barely beat
@@ -53,7 +53,17 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
    - The event-jump overlay assumed a 0.5% daily jump chance for High-risk stocks, which is 72% a year.
    - Measured on NSE-wide base rates, price-based risk proxies showed no more stock-specific crashes than the stock's
      own history, which the base model already uses. The default is now 0.
+   - The disclosure tiers were then tested the same way on 27,033 NSE shareholding filings from 2021 to 2024, and
+     showed no excess either, so the default stays 0.
    - A grid shows what any assumed jump would add. [Methodology §12.4](docs/methodology.md#124-jump-overlay-on-es)
+6. **Promoter pledges carry a real warning that momentum misses, but they don't beat momentum.**
+   - The test covers every NSE company, 2022–2024, under a pre-registration, on the filings as first published.
+   - **Pledges warn.** Stocks with half or more of promoter shares pledged or encumbered fell 50% within a year
+     1.9 times as often as average (90% range 1.6–2.2).
+   - **They don't beat momentum,** which had a lift of 2.4.
+   - **They add information momentum misses.** Among stocks not already down 30%, the lift stays at 1.9.
+   - Pre-2021 pledges are not served by any exchange to scripts, so Zee, Jet Airways and DHFL remain untested on
+     this pillar. [Wider event test](docs/case_studies.md#wider-event-test-every-nse-stock-20212024-october-2026)
 
 ## What it does
 

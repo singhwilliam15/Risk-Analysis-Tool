@@ -52,9 +52,9 @@ def summary(df: pd.DataFrame, rules) -> dict:
         rest = part[~part["flag_drawdown_30"].fillna(False).astype(bool)]
         inc = W.table(rest, rules)
         _, n2, ev2, counts2 = W.per_date_counts(rest, [r for r in rules if r != "drawdown_30"] + ["tool"])
-        counts2["drawdown_30"] = counts2["tool"]  # (a) flags nothing here; the reference only fills the columns
-        bi = W.block_bootstrap(n2, ev2, counts2)
-        out[subset] = (t, b, inc, bi)
+        bi = W.block_bootstrap(n2, ev2, counts2, reference="tool")  # (a) flags nothing here: differences vs v1
+        bi = bi.rename(columns=lambda c: c.replace("lift(tool)", "lift(v1 any price flag)"))
+        out[subset] = (t, b, inc, bi[bi["Rule"] != "drawdown_30"])
     return out
 
 

@@ -372,6 +372,7 @@ decisions.py           Shapley risk change, Euler ES, trades, hedge, limits, top
 memo.py                One-page CRO memo (Markdown and PDF via reportlab + matplotlib)
 case_studies/          Evidence: cases.json, engine.py (flags, baselines), run.py, results/, data/ (transcribed statements)
 universe.py            The wider test on every NSE stock (bhavcopies, corporate actions) and the jump base rates
+event_universe.py      The event pillar tested on every NSE stock, 2021–2024 (shareholding history, point in time)
 warnings_v2.py         Early-warning rules v2 (own-history and peer ES, volatility shock, logistic score), tested out of sample
 data/disclosures/      Bundled NSE snapshot (raw JSON in raw/), manifest.json, templates and sources
 data/credit/           Agency default-rate tables (CRISIL, ICRA FY2025 studies) and the DD reference universe
@@ -437,7 +438,7 @@ test_data/             Saved yfinance statements used as test fixtures
   - trades are judged on past returns without transaction costs;
   - the limits are examples.
 - **Case studies:**
-  - only 5 of 6 cases have prices, and 20 case dates are illustrative, not statistically meaningful;
-  - the event pillar is not scored on the cases (NSE serves pledge history only from September 2021); credit is scored, but the control group has statements only for HDFC Bank;
+  - all 6 cases have prices (DHFL from NSE's bhavcopies), but 24 case dates are illustrative, not statistically meaningful;
+  - the event pillar is scored only on Adani among the cases (NSE serves pledge history only from September 2021), and on every NSE stock for 2021–2024 in the wider event test; credit is scored, but the control group has statements only for HDFC Bank;
   - the warning thresholds are assumptions.
 - **Disclosure layouts.** The NSE parsers are checked on real downloads (October 2026); files from other providers go through an alias table that has not been checked against their downloads.

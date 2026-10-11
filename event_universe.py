@@ -53,11 +53,11 @@ def point_in_time(rows: pd.DataFrame, filings: pd.DataFrame) -> pd.DataFrame:
     also public by as_of.
     """
     f = filings.dropna(subset=["panel_symbol"]).copy()
-    f["disclosure_date"] = pd.to_datetime(f["disclosure_date"])
-    f["quarter_end"] = pd.to_datetime(f["quarter_end"])
+    f["disclosure_date"] = pd.to_datetime(f["disclosure_date"]).astype("datetime64[ns]")  # one resolution on both sides
+    f["quarter_end"] = pd.to_datetime(f["quarter_end"]).astype("datetime64[ns]")
     f = f.sort_values("disclosure_date")
     left = rows[["symbol", "as_of"]].copy()
-    left["as_of"] = pd.to_datetime(left["as_of"])
+    left["as_of"] = pd.to_datetime(left["as_of"]).astype("datetime64[ns]")
     left["_row"] = np.arange(len(left))
     latest = pd.merge_asof(left.sort_values("as_of"), f.rename(columns={"panel_symbol": "symbol_f"})
                            [["symbol_f", "disclosure_date", "quarter_end", "encumbered_pct_of_promoter", "measure"]],

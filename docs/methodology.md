@@ -211,7 +211,7 @@ Holdings can be entered as weights, share counts or money values. Each holding i
 - **Bundled snapshot (since October 2026).** `scripts/fetch_disclosures.py` reads NSE's public endpoints and writes a dated snapshot:
   - **Price bands** (`sec_list.csv`) and **F&O ban** files are saved unchanged.
   - **ASM/GSM** lists (JSON) go to the surveillance template. The lists show today's stage only, so `date_in` is the list date. The GSM stage is read from NSE's description ("GSM Stage 0", "Graded Surveillance Measure - Stage VI").
-  - **Pledges** come from each quarter's shareholding-pattern XBRL (SEBI LODR Reg. 31): promoter holding, shares pledged as % of the promoter holding and of total shares, and the number pledged. Shares under non-disposal undertakings are not pledges and are left out. The public date is NSE's broadcast date. NSE's own pledge-data API returns nothing, and the shareholding history reaches back only about 20 quarters.
+  - **Pledges** come from each quarter's shareholding-pattern XBRL (SEBI LODR Reg. 31): promoter holding, shares pledged as % of the promoter holding and of total shares, and the number pledged. Shares under non-disposal undertakings are not pledges and are left out. The public date is NSE's broadcast date. NSE's own pledge-data API returns only the latest record. The shareholding history reaches back to September 2021. Filings before mid-2025 use an older taxonomy that reports only shares "pledged or otherwise encumbered" (pledges and non-disposal undertakings together); `nse_sources.shareholding_encumbered` reads it, labelled with that measure (§12.6).
   - **Ratings** come from NSE's credit-rating disclosures (SEBI LODR Reg. 30), swept month by month for 24 months and kept for covered issuers, matched by the issuer code inside the rated ISIN. The action maps as: New → assigned; Reaffirm → reaffirmed; an explicit upgrade, downgrade, withdrawal or watch as stated; otherwise the change against the earlier rating in the same filing. A record whose action cannot be read is skipped, not guessed.
   - **Covered stocks:** the presets, Jaiprakash Power, and the five non-financial Nifty Midcap 150 / Smallcap 250 stocks with the highest share of total shares pledged, picked by a scan of every constituent's latest filing.
   - **Data as of:** each dataset's as-of date is shown on the Overview and Events pages.
@@ -633,7 +633,7 @@ Rating grades are read from the agencies' text (e.g. "CRISIL AA+", "[ICRA]A (Sta
   - **The 90% range** comes from resampling stocks, because one stock's monthly windows overlap.
   - **J** is the mean size of the qualifying falls.
   - **The old values** were checked only on crash-selected case dates, which is circular (review M2).
-  - **Limit:** the proxies are price-based, the only tier signals measurable point in time for every NSE stock. Disclosure-driven tiers (pledges, downgrades, auditor events) for stocks with calm prices could carry jump risk their own history does not show. That base rate is not measurable from public archives (NSE's pledge history starts in September 2021), so the default is zero rather than a guess, and the sensitivity table shows what any assumed p and J would add.
+  - **Limit:** the proxies are price-based, the only tier signals measurable point in time for every NSE stock. Disclosure-driven tiers (pledges, downgrades, auditor events) for stocks with calm prices could carry jump risk their own history does not show. Pre-2021 base rates are not measurable from public archives, because NSE's pledge history starts in September 2021. For 2021–2024 the disclosure-based tiers were measured directly (§12.6), and they also show no excess, so the default stays zero. The sensitivity table shows what any assumed p and J would add.
 - **ES sensitivity table** (Events page): event-adjusted ES for p ∈ {0.01, 0.05, 0.1, 0.25, 0.5, 1}% a day × J ∈ {−10, −20, −30, −50}%. It applies to the holdings in Elevated or High, or to the largest holding (labelled hypothetical) if none is. Each cell is the same closed form below.
 - **Base distribution:** the one-day return distribution of the stock or portfolio is loc + scale·T_ν. This is the fitted GARCH(1,1)-t (σ̂·√((ν − 2)/ν) as the scale), or the Student-t fit if GARCH did not converge.
 - **Portfolio:** a jump in holding i shifts the portfolio return by wᵢJᵢ. Every combination of jumps is enumerated exactly up to 12 jumping holdings; above that, up to two jumps.
@@ -650,6 +650,38 @@ Rating grades are read from the agencies' text (e.g. "CRISIL AA+", "[ICRA]A (Sta
 - **Assumptions counted:** only the jump settings of tiers that some holding actually falls in.
 - **Missing data:** each disclosure dataset not loaded costs a point, capped at 2.
 - **Value in Elevated/High and the number of High holdings:** no range.
+
+### 12.6 Historical test of the event tiers (`event_universe.py`, October 2026)
+
+Pre-registered in [preregistration_events.md](preregistration_events.md); results are in
+[case_studies.md](case_studies.md#wider-event-test-every-nse-stock-20212024-october-2026).
+
+- **Data:** every NSE company's quarterly shareholding XBRL, Sep 2021 – Dec 2024: 27,033 filings from 2,165
+  companies (`scripts/fetch_shareholding_history.py`).
+  - **Point in time:** only each quarter's original filing is used, from its broadcast date. Revisions are ignored.
+    Sep 2021 filings were broadcast about 84 days late, so they count from January 2022.
+- **Measure:** "pledged or otherwise encumbered" % of promoter holding, an upper bound on pledges. It is the only
+  measure filed before mid-2025.
+- **Matching filings to stocks:** by symbol, followed through NSE's renames, with the ISIN as a fallback. The ISIN
+  alone fails because NSE's list leaves it blank for 77 companies and gives partly-paid ISINs for others.
+- **Rules:**
+  - E1: encumbered ≥ 50%, the High pledge rule;
+  - E2: up ≥ 10 pp in four quarters, using the quarter ≥ 360 days earlier that was also public by the date;
+  - E3: tier ≥ Elevated from `events.classify` on the pledge and circuit signals, the only ones with point-in-time
+    history for every company;
+  - E3p: the same tier on pledges alone.
+- **Measures, as in §15.3:** lift with paired 12-month block-bootstrap intervals, and incremental lift on
+  stock-dates not already down 30%.
+- **Jump check:** on the High (E1) and Elevated (E3 but not E1) groups, the forward rate of stock-specific falls
+  minus the stock's own trailing rate, as in §12.4.
+  - **Result:** the High excess is −0.010% a day (90% range −0.026% to +0.002%) and the Elevated excess −0.087%
+    (−0.149% to −0.029%).
+  - Neither 5th percentile is above zero, so both defaults stay 0.
+- **Limits:**
+  - only 27 month-ends in the primary window;
+  - no ratings, surveillance or auditor history;
+  - encumbrance is not the same as pledges;
+  - 2021–2024 had no heavily pledged collapse on the scale of Zee or DHFL.
 
 ## 13. Integrated stress (`integration.py`)
 
