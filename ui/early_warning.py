@@ -1,9 +1,9 @@
 """
-Early-warning box on the Market page (NEXT_STEPS_V5 Phase F): the rule in use for a 12-month crash warning, its
-out-of-sample record on every NSE stock (2020-2024), and whether it fires for each holding today.
+"Signals with a tested record" (FINAL_PLAN_V6 Phase 3), on the Market page: every warning signal the tool shows, whether
+it fires now for each NSE holding, its tested record and an evidence badge (evidence.py).
 
-The decision between v1 and the v2 challenger was fixed in advance (docs/preregistration_warnings_v2.md) and is
-read from case_studies/results/warnings_v2_decision.json; nothing here chooses a rule.
+The official market flag was fixed by the pre-registered test (docs/preregistration_warnings_v2.md): v1 stays in use
+because the challenger did not beat momentum. Nothing here chooses or re-tunes a rule.
 """
 
 import json
@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+import events as E
+import evidence as V
 import warnings_v2 as W
 from case_studies import engine as K
 from events import load_rules
@@ -20,26 +22,19 @@ from stress import price_series
 from ui.cache import cached_fetch
 
 RESULTS = Path(__file__).resolve().parent.parent / "case_studies" / "results"
+PRICE_RULES = ("drawdown_30", "r4", "r2", "market", "tool", "below_200dma", "liquidity", "stress", "r1", "r3",
+               "vol_top_decile")
 
 
 @st.cache_data(show_spinner=False)
 def load_record() -> dict:
-    """The frozen model, the decision, the test-period lifts with their 90% intervals, and the NSE cross-section."""
+    """The frozen R4 model, the pre-registered decision and the NSE cross-section R2/R4 compare against."""
     try:
-        model = json.loads((RESULTS / "warnings_v2_model.json").read_text())
-        decision = json.loads((RESULTS / "warnings_v2_decision.json").read_text())
-        reference = json.loads((RESULTS / "warnings_v2_reference.json").read_text())
-        test = pd.read_csv(RESULTS / "warnings_v2_test.csv")
-        boot = pd.read_csv(RESULTS / "warnings_v2_bootstrap.csv")
+        return {"model": json.loads((RESULTS / "warnings_v2_model.json").read_text()),
+                "decision": json.loads((RESULTS / "warnings_v2_decision.json").read_text()),
+                "reference": json.loads((RESULTS / "warnings_v2_reference.json").read_text())}
     except FileNotFoundError:
         return {}
-    test = test[(test["Universe"] == "all") & (test["Outcome"] == "observed path")].set_index("Rule")
-    boot = boot[boot["Universe"] == "all"].set_index("Rule")
-    record = {r: {"lift": test.loc[r, "Lift"], "low": boot.loc[r, "Lift 5%"], "high": boot.loc[r, "Lift 95%"],
-                  "flag_rate": test.loc[r, "Flag rate"], "recall": test.loc[r, "Recall"], "label": W.LABELS[r]}
-              for r in test.index if r in boot.index}
-    return {"model": model, "decision": decision, "reference": reference, "record": record,
-            "base_rate": float(test["Base rate"].iloc[0])}
 
 
 @st.cache_data(show_spinner=False)
@@ -56,56 +51,77 @@ def _frame(res: dict) -> pd.DataFrame:
     return df[["Date", "Open", "High", "Low", "Close", "Volume", "Returns", "value", "series"]]
 
 
-def _lift_text(rec: dict) -> str:
-    return f"lift {rec['lift']:.2f} (90% range {rec['low']:.2f}–{rec['high']:.2f}), flags {rec['flag_rate']:.0%} of stock-dates"
+def _mark(value) -> str:
+    if value is None or (isinstance(value, float) and not np.isfinite(value)):
+        return "n.a."
+    return "✓ fires" if bool(value) else "–"
+
+
+def event_flags(signals: dict, rules: dict) -> dict:
+    """The pledge rules as tested (E1, E2, E3 on pledges and circuits, E3p on pledges) and each untested red flag."""
+    pledge = signals.get("pledge")
+    out = {"e1": None if pledge is None else pledge["pledged_pct_of_promoter"] >= rules["high"]["pledged_pct_of_promoter_min"],
+           "e2": None if pledge is None or not np.isfinite(pledge["change_4q_pp"])
+           else pledge["change_4q_pp"] >= rules["elevated"]["pledge_increase_4q_pp_min"],
+           "e3": E.classify({"pledge": pledge, "circuit": signals.get("circuit")}, rules)["tier"] != E.LOW
+           if pledge is not None or signals.get("circuit") is not None else None,
+           "e3p": None if pledge is None else E.classify({"pledge": pledge}, rules)["tier"] != E.LOW}
+    for sid in V.UNTESTED_IDS:
+        s = signals.get(sid)
+        out[sid] = None if s is None else E.classify({sid: s}, rules)["tier"] != E.LOW
+    return out
+
+
+def holding_flags(ctx, ticker: str, data: dict, market) -> dict:
+    flags = {}
+    res = cached_fetch(ticker, period="max")
+    if res["success"] and market is not None:
+        a = assess_holding(_frame(res), market, data["model"], data["reference"])
+        if a.get("available"):
+            flags.update({sid: a.get(f"flag_{sid}") for sid in PRICE_RULES})
+    flags.update(event_flags(ctx.event_signals.get(ticker, {}), load_rules()))
+    return flags
+
+
+def panel_table(registry: pd.DataFrame, flags_by_holding: dict) -> pd.DataFrame:
+    """One row per signal in evidence order: fires now per holding, tested lift, window, beyond momentum, badge."""
+    rows = []
+    for r in registry.to_dict("records"):
+        row = {"Signal": r["label"]}
+        for t, flags in flags_by_holding.items():
+            row[t.replace(".NS", "").replace(".BO", "") if len(flags_by_holding) > 1 else "Fires now"] = _mark(flags.get(r["id"]))
+        row.update({"Evidence": r["badge"], "Tested lift (90% range)": V.lift_text(r),
+                    "Among stocks not down 30%": V.incremental_text(r), "Test window (NSE month-ends)": V.SHORT.get(r["test"], "—")})
+        rows.append(row)
+    return pd.DataFrame(rows)
 
 
 def render(ctx) -> None:
     data = load_record()
-    if not data:
+    registry = V.registry()
+    if not data or registry.empty:
         return
-    tickers = list(ctx.price_frames)
-    indian = [t for t in tickers if t.upper().endswith((".NS", ".BO"))]
-    rec, decision = data["record"], data["decision"]
-    challenger = decision["challenger"]
-    in_use = challenger if decision["wins"] else "market"
-    st.markdown("#### 🚦 Early warning: a fall of 50% or more within 12 months")
-    verdict = (f"**In use: {rec[in_use]['label']}**, {_lift_text(rec[in_use])}. "
-               if decision["wins"] else
-               f"**In use: the v1 market flag** ({_lift_text(rec['market'])}). The pre-registered challenger, "
-               f"**{rec[challenger]['label']}**, scored higher ({_lift_text(rec[challenger])}) but did not beat "
-               f"the naive momentum rule *{rec['drawdown_30']['label']}* ({_lift_text(rec['drawdown_30'])}) by a "
-               "margin the test could confirm, so it is shown alongside, not used. ")
-    st.caption(verdict + f"Tested out of sample on every NSE stock, month-ends 2020–2024 (base rate "
-               f"{data['base_rate']:.1%}); lift = how many times more often a flagged stock crashed than the average "
-               "stock. Pre-registration: docs/preregistration_warnings_v2.md.")
+    st.markdown("#### Signals with a tested record (a fall of 50% or more within 12 months)")
+    decision = data["decision"]
+    st.caption("**Official market flag: v1 (legacy rule).** The pre-registered challenger, R4, scored higher but did "
+               "not beat the momentum rule by a margin the test could confirm, so v1 stays "
+               "(docs/preregistration_warnings_v2.md)." if not decision.get("wins") else
+               f"**Official market flag: {decision['challenger'].upper()}** (won the pre-registered test); v1 is the legacy rule.")
+    indian = [t for t in ctx.price_frames if t.upper().endswith((".NS", ".BO"))]
     if not indian:
-        st.info("These rules were tested on NSE stocks only, so they are not shown for this ticker.")
+        st.info("These signals were tested on NSE stocks only, so they are not shown for this ticker.")
         return
     market_res = cached_fetch(ctx.benchmark_symbol, period="max")
-    if not market_res["success"]:
-        return
-    market = price_series(market_res["df"]).pct_change().dropna()
-    market.index = pd.to_datetime(market.index).tz_localize(None).normalize()
-    rows = []
-    for t in indian:
-        res = cached_fetch(t, period="max")
-        if not res["success"]:
-            continue
-        a = assess_holding(_frame(res), market, data["model"], data["reference"])
-        if not a.get("available"):
-            rows.append({"Holding": t, "v1 market flag": a.get("note", "not available")})
-            continue
-        score = a.get("r4_score", np.nan)
-        rows.append({"Holding": t, "As of": f"{a['as_of']:%d %b %Y}",
-                     "v1 market flag": "⚠ fires" if a["flag_market"] else "–",
-                     f"{challenger.upper()} (challenger)": ("⚠ fires" if a[f"flag_{challenger}"] == 1 else "–")
-                     if np.isfinite(a.get(f"flag_{challenger}", np.nan)) else "needs ~3 years of prices",
-                     "R4 score": f"{score:.0%}" if np.isfinite(score) else "–",
-                     "(a) down ≥ 30% in 6 months": "⚠ fires" if a["flag_drawdown_30"] else "–"})
-    if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
-        st.caption(f"Peer comparison (R2, and R4's peer feature) uses the NSE cross-section of "
-                   f"{pd.Timestamp(data['reference']['as_of']):%d %b %Y} ({data['reference']['stocks']:,} stocks), the "
-                   "latest in the bhavcopy panel. Traded value here is close × Yahoo volume, which can include BSE volume. "
-                   "A flag is a statistical warning, not a forecast: even the best rule's flagged stocks mostly did not crash.")
+    market = None
+    if market_res["success"]:
+        market = price_series(market_res["df"]).pct_change().dropna()
+        market.index = pd.to_datetime(market.index).tz_localize(None).normalize()
+    flags = {t: holding_flags(ctx, t, data, market) for t in indian}
+    st.dataframe(panel_table(registry, flags), hide_index=True, width="stretch")
+    st.caption("**Lift** = how many times more often a flagged stock fell 50% or more within 12 months than the average "
+               "NSE stock in the test. Evidence badges: *works* = beats the momentum rule; *weaker than momentum* = warns "
+               "(range above 1) but does not beat it; *no effect* = range includes 1; *not back-tested* = no history to "
+               "test. Price rules were tested on month-ends 2020–24, pledge rules on Oct 2022 – Dec 2024, so compare "
+               "lifts within a window. Pledge rules were tested on shares 'pledged or otherwise encumbered' (filings to "
+               "mid-2025); the app's current file reports pledges only. Peer comparison uses the NSE cross-section of "
+               f"{pd.Timestamp(data['reference']['as_of']):%d %b %Y}. A flag is a statistical warning, not a forecast.")

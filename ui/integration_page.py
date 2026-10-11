@@ -39,7 +39,7 @@ def render(ctx):
                    "triggers a circuit or more margin calls. The bars split the linked loss across market, liquidity, "
                    "credit and events by exact Shapley values, so the parts add up to the total.")
         if len(ctx.linked_active) < 2:
-            st.info("Only the liquidity link can act on these holdings: no pledge data are loaded (Events page), and "
+            st.info("Only the liquidity link can act on these holdings: no pledge data are loaded (Promoter Pledge & Governance page), and "
                     "credit adds no loss for an equity holder. With one active link the interaction is zero by "
                     "construction; feedback from your own exit still moves the price (see the detail).")
 

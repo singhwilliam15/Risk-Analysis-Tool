@@ -16,15 +16,17 @@ MARKET = "Market"
 LIQUIDITY = "Liquidity"
 CREDIT = "Credit"
 CONCENTRATION = "Concentration & Factors"
-EVENTS = "Event & Governance"
+EVENTS = "Promoter Pledge & Governance"
 INTEGRATED = "Integrated Stress"
 DECISIONS = "Decisions"
 TRUST = "Trust"
 PAGES = (OVERVIEW, MARKET, LIQUIDITY, CREDIT, CONCENTRATION, EVENTS, INTEGRATED, DECISIONS, TRUST)
 PAGE_KEY = "page"
 # Shareable links: ?page=market opens the Market page (slugs: overview, market, liquidity, credit,
-# concentration-factors, event-governance, integrated-stress, decisions, trust)
+# concentration-factors, promoter-pledge-governance, integrated-stress, decisions, trust; old links
+# ?page=event-governance and ?page=events still open the pledge page)
 SLUGS = {p: re.sub(r"[^a-z]+", "-", p.lower()).strip("-") for p in PAGES}
+ALIASES = {"event-governance": SLUGS[EVENTS], "events": SLUGS[EVENTS], "pledges": SLUGS[EVENTS]}  # renamed in v6 Phase 3
 
 
 def page_from_url(value) -> str:
@@ -32,6 +34,7 @@ def page_from_url(value) -> str:
     if not value:
         return None
     wanted = re.sub(r"[^a-z]+", "-", str(value).lower()).strip("-")
+    wanted = ALIASES.get(wanted, wanted)
     return next((p for p, slug in SLUGS.items() if slug == wanted), None)
 
 

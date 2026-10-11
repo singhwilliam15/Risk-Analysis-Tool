@@ -646,6 +646,11 @@ Rating grades are read from the agencies' text (e.g. "CRISIL AA+", "[ICRA]A (Sta
 
 ### 12.5 Ranges and grades
 
+- **Page layout (October 2026, v6 Phase 3):** the page is now "Promoter Pledge & Governance Risk".
+  - It leads with the pledge core and its tested evidence.
+  - The ES cards move into "Analyst details" while every applied jump probability is 0, the calibrated default.
+  - A coverage line lists what was checked, and warns only for files the repository normally loads.
+
 - **Event-adjusted ES and its gap:** the range runs from ½× to 2× every jump probability ("range across jump assumptions").
 - **Assumptions counted:** only the jump settings of tiers that some holding actually falls in.
 - **Missing data:** each disclosure dataset not loaded costs a point, capped at 2.
@@ -864,6 +869,21 @@ The full design is in [preregistration_warnings_v2.md](preregistration_warnings_
   - the logistic fit recovers known coefficients and refuses rows outside 2016–2018;
   - the incremental and lead-time measures are checked by hand;
   - the block bootstrap's 90% interval covers a known lift in 80–97% of 200 simulated panels with persistent date effects.
+
+### 15.5 Evidence badges (`evidence.py`, October 2026)
+
+Every warning signal the app shows carries its tested record, read from the committed results, and a badge fixed
+in advance from the pre-registered readings:
+- **Tested · works:** the 90% interval of lift − lift(momentum) lies above 0; the momentum benchmark itself counts
+  if its lift interval lies above 1;
+- **Tested · weaker than momentum:** the lift interval lies above 1, but the signal does not beat momentum;
+- **Tested · no effect:** the lift interval includes 1, or without an interval the lift is at most 1;
+- **Not back-tested:** no historical data exist to test it (surveillance, F&O ban, rating actions, auditor events,
+  group links, Merton DD and RBI PCA).
+
+The Market page's "Signals with a tested record" panel lists every signal in this order, with whether it fires now
+for each NSE holding. Lifts come from different windows: price rules 2020–24, pledge rules Oct 2022 – Dec 2024, and
+the v1 liquidity and stress flags 2016–24 without a range. They are best compared within a window.
 
 ## 16. Demo snapshot (`ui/snapshot.py`, `scripts/build_snapshot.py`)
 

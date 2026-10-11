@@ -9,7 +9,7 @@ linked stress engine. Every headline number has a 90% range and an A–D trust g
 real Indian collapses and against every NSE stock from 2016 to 2024, and it reports where it does not beat simpler
 rules.
 
-**▶ Live demo: [risk-analysis-tool.streamlit.app](https://risk-analysis-tool.streamlit.app/)**. Any page can be opened directly, e.g. [the Market page with its early-warning box](https://risk-analysis-tool.streamlit.app/?page=market).
+**▶ Live demo: [risk-analysis-tool.streamlit.app](https://risk-analysis-tool.streamlit.app/)**. Any page can be opened directly, e.g. [the Market page with its signals and their tested record](https://risk-analysis-tool.streamlit.app/?page=market).
 It opens on a demo snapshot of the presets, rebuilt after every NSE session (prices to the last trading day), so
 they load at once. Switch **Data → Live** in
 the sidebar for today's prices, or type any NSE, BSE or US ticker.
@@ -75,7 +75,7 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
 | **Liquidity** | Days to liquidate, AMFI-style stress test, Corwin-Schultz spread, square-root impact, liquidity-adjusted VaR, official NSE price bands and circuit-lock freezes. |
 | **Credit** | Merton distance to default with its percentile, agency default rates (CRISIL, ICRA studies), Altman Z/Z''. Banks and NBFCs against RBI PCA thresholds; bonds and loans with expected loss and spread stress. |
 | **Concentration** | Fama-French-Carhart factors (IIMA India, Kenneth French US) with Newey-West errors, factor/specific risk split, effective number of bets, crisis correlation. |
-| **Event & governance** | Point-in-time NSE data: promoter pledges, ASM/GSM, F&O bans, price bands, rating actions. Low/Elevated/High tier, pledge margin-call trigger, jump overlay with a sensitivity grid. |
+| **Promoter pledge & governance** | Pledge level and 4-quarter change (promoter encumbrance), the margin-call trigger price and the forced selling in days of volume, with their tested record. Other red flags (ASM/GSM, rating actions, auditor events, F&O ban, group links) each carry an evidence badge. The jump overlay is off by default and kept in the analyst details. |
 | **Integration & decisions** | Linked stress as a price fixed point with a Shapley split and interaction, jump to default, reverse stress (stock and macro space), risk-change attribution, risk-reducing trades, limits, CRO dashboard and one-page memo. |
 
 More: [features and live results](docs/features.md) · [methodology and references](docs/methodology.md) ·
@@ -111,7 +111,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 635 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 640 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).

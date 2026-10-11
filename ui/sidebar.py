@@ -135,7 +135,7 @@ def render_sidebar(ctx):
         st.caption("One-day jump per event-risk tier, added to the return distribution. Default probability 0: on "
                    "NSE-wide base rates, price-based proxies for the tiers showed no more stock-specific falls than the "
                    "stock's own history, which the model already uses (methodology §12.4). Sizes are the mean falls "
-                   "measured there. Set a probability to see what an event would add; the Events page shows a grid.")
+                   "measured there. Set a probability to see what an event would add; the Promoter Pledge & Governance page shows a grid (analyst details).")
         c1, c2 = st.columns(2)
         elevated_p = c1.number_input("Elevated: jump probability, % a day", 0.0, 10.0, DEFAULT_JUMPS[ELEVATED][0] * 100, 0.05,
                                      key="ev_elevated_p") / 100

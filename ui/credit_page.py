@@ -10,6 +10,7 @@ import streamlit as st
 
 import credit as C
 import debt as D
+from ui.coverage import coverage_text
 from ui.credit_layer import EQUITY_VOL_CHOICES
 from ui.formatting import MODEL_COLORS
 
@@ -215,7 +216,8 @@ def _ratios(res, ctx):
     st.markdown("**Credit ratios**")
     ratios = res["ratios"]
     if ratios.empty:
-        st.info("No statements available.")
+        st.caption(coverage_text([], {"Credit ratios": "no statements for this holding; upload them with the template on "
+                                      "the Overview page"}))
         return
     shown = ratios[list(C.RATIO_LABELS)].rename(columns=C.RATIO_LABELS).T
     shown.columns = [f"FY {c:%b %Y}" for c in shown.columns]

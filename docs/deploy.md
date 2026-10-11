@@ -90,7 +90,7 @@ These need your GitHub or Streamlit account, so they are listed here rather than
    - **Publish the first zip:** GitHub → **Actions** → **refresh snapshot** → **Run workflow**, with *force*
      ticked. It publishes the first zip and commits `data/snapshot/published.json` to `main`.
    - **Check the live app:** open https://risk-analysis-tool.streamlit.app/ and confirm the sidebar shows the new
-     date and the Market page shows the Early warning box. Reboot it once from the app's ⋮ menu if it doesn't.
+     date and the Market page shows the "Signals with a tested record" panel. Reboot it once from the app's ⋮ menu if it doesn't.
 3. **Delete the merged branches,** locally and on GitHub: `review-fixes-v4` and `full-risk-tool` now, and
    `next-steps-v5` after the merge.
 4. **Old repositories:** archive the old VaR-Tool repository (GitHub → Settings → Archive), and decide whether to

@@ -351,5 +351,9 @@ def assess(frame: pd.DataFrame, market: pd.Series, model: dict, reference: dict,
     out = row.iloc[0].to_dict()
     base = K.baselines(frame, frame["Date"].iloc[-1])
     out.update(available=True, flag_market=bool(pf["flags"]["market"]), flag_drawdown_30=base["flags"]["drawdown_30"],
+               flag_liquidity=bool(pf["flags"]["liquidity"]), flag_stress=bool(pf["flags"]["stress"]),
+               flag_tool=bool(any(pf["flags"].values())),
+               flag_vol_top_decile=base["flags"]["vol_top_decile"] if base["available"]["vol_top_decile"] else np.nan,
+               flag_below_200dma=base["flags"]["below_200dma"] if base["available"]["below_200dma"] else np.nan,
                es_hist=pf["es_hist"])
     return out

@@ -39,14 +39,19 @@ def test_single_stock_mode(fake_market):
     assert len(models) == 8 and "GARCH(1,1)-t" in models.index
 
 
-def test_market_page_shows_the_early_warning_record(fake_market):
-    """The rule in use, its tested lift (from case_studies/results) and whether it fires for an NSE holding."""
+def test_market_page_shows_the_signals_with_a_tested_record(fake_market):
+    """Every signal in evidence order, whether it fires now, its tested lift and badge; the official flag stated."""
+    import evidence as V
     at = run_app()
     assert_clean(at)
-    assert any("Early warning" in m.value for m in at.markdown)
-    assert any("In use:" in c.value and "pre-registered" in c.value.lower() for c in at.caption)
-    table = next(d.value for d in at.dataframe if "v1 market flag" in d.value.columns)
-    assert table["Holding"].tolist() == ["ASIANPAINT.NS"]
+    assert any("Signals with a tested record" in m.value for m in at.markdown)
+    assert any("Official market flag: v1 (legacy rule)" in c.value for c in at.caption)
+    table = next(d.value for d in at.dataframe if "Evidence" in d.value.columns)
+    assert table["Signal"].tolist() == V.registry()["label"].tolist()  # evidence order
+    assert table["Evidence"].iloc[0] == V.WORKS and table["Evidence"].iloc[-1] == V.UNTESTED
+    assert set(table["Fires now"]) <= {"✓ fires", "–", "n.a."}
+    momentum = table[table["Signal"].str.startswith("Already down 30%")].iloc[0]
+    assert momentum["Tested lift (90% range)"].startswith("1.78×")
     us = run_app(**{"Quick Preset Ticker": "Apple (US)"})
     assert_clean(us)
     assert any("tested on NSE stocks only" in i.value for i in us.info)
@@ -234,12 +239,19 @@ def test_events_page_without_disclosures(fake_market, mode, monkeypatch, tmp_pat
     import ui.foundations
     # An empty disclosure folder (the repo ships a dated NSE snapshot, see the next tests)
     monkeypatch.setattr(ui.foundations, "load_disclosures", lambda: disclosures.load_disclosures(tmp_path))
-    at = run_app(mode if mode == "Portfolio" else None, page="Event & Governance")
+    at = run_app(mode if mode == "Portfolio" else None, page="Promoter Pledge & Governance")
     assert_clean(at)
-    assert any("Disclosure data not loaded" in w.value for w in at.warning)
-    panel = at.dataframe[0].value
-    assert (panel["Promoter pledge"] == "not available").all() and panel["Basis"].str.contains("signals").all()
-    assert [m.label for m in at.metric][:2] == ["Event-adjusted ES (95%, 1-day)", "ES added by event risk"]
+    assert any(s.value.startswith("Promoter Pledge & Governance Risk") for s in at.subheader)
+    assert any(c.value.startswith("Checked ") and "Not checked" in c.value for c in at.caption)
+    # Only fixable gaps warn (files normally loaded); auditor events are missing by design and only in the line
+    assert any("Missing data that is normally loaded" in w.value for w in at.warning)
+    assert not any("Auditor" in w.value for w in at.warning)
+    core = next(d.value for d in at.dataframe if "Pledged (% of promoter holding)" in d.value.columns)
+    assert (core["Pledged (% of promoter holding)"] == "not available").all()
+    tiers = next(d.value for d in at.dataframe if "Based on" in d.value.columns)
+    assert tiers["Based on"].str.contains("signals").all()
+    analyst = next(e for e in at.expander if e.label.startswith("Analyst details"))
+    assert [m.label for m in analyst.metric][:2] == ["Event-adjusted ES (95%, 1-day)", "ES added by event risk"]
 
 
 def _sample_disclosures(tmp_path):
@@ -264,20 +276,25 @@ def test_events_page_with_sample_disclosures(fake_market, monkeypatch, tmp_path)
     import ui.foundations
     _sample_disclosures(tmp_path)
     monkeypatch.setattr(ui.foundations, "load_disclosures", lambda: disclosures.load_disclosures(tmp_path))
-    at = run_app("Portfolio", page="Event & Governance")
+    at = run_app("Portfolio", page="Promoter Pledge & Governance")
     assert_clean(at)
-    panel = at.dataframe[0].value.set_index("Ticker")
-    assert panel.loc["RELIANCE.NS", "Tier"] == "🔴 High"  # 60% pledged; the 90% row is disclosed after the as-of date
-    assert "60.0% of promoter holding" in panel.loc["RELIANCE.NS", "Promoter pledge"]
-    assert "+55.0 pp" in panel.loc["RELIANCE.NS", "Promoter pledge"]
-    assert panel.loc["HDFCBANK.NS", "Tier"] == "🟠 Elevated" and panel.loc["TCS.NS", "Tier"] == "🟠 Elevated"
-    # Calibrated defaults: no extra jump probability, so event risk adds exactly nothing to ES...
-    assert at.metric[1].value == "₹0"
-    # ...until a probability is set for the High tier (RELIANCE is High)
+    tiers = next(d.value for d in at.dataframe if "Based on" in d.value.columns).set_index("Holding")
+    assert tiers.loc["RELIANCE.NS", "Tier"] == "🔴 High"  # 60% pledged; the 90% row is disclosed after the as-of date
+    core = next(d.value for d in at.dataframe if "Pledged (% of promoter holding)" in d.value.columns).set_index("Holding")
+    assert core.loc["RELIANCE.NS", "Pledged (% of promoter holding)"] == "60.0%"
+    assert core.loc["RELIANCE.NS", "Change over 4 quarters"] == "+55.0 pp"
+    assert tiers.loc["HDFCBANK.NS", "Tier"] == "🟠 Elevated" and tiers.loc["TCS.NS", "Tier"] == "🟠 Elevated"
+    flags = next(d.value for d in at.dataframe if "Red flag" in d.value.columns)
+    assert set(flags["Evidence"]) <= {"Not back-tested", "Tested · weaker than momentum"}
+    # Calibrated defaults: no extra jump probability, so event risk adds exactly nothing, and the cards are in the expander
+    analyst = next(e for e in at.expander if e.label.startswith("Analyst details"))
+    assert analyst.metric[1].value == "₹0"
+    # ...until a probability is set for the High tier (RELIANCE is High): then the cards are at the top again
     at.number_input(key="ev_high_p").set_value(0.5)
     at.run()
     assert_clean(at)
-    assert at.metric[1].value not in ("₹0", "not available")
+    analyst = next(e for e in at.expander if e.label.startswith("Analyst details"))
+    assert len(analyst.metric) == 0 and at.metric[1].value not in ("₹0", "not available")
 
 
 def test_headline_numbers_carry_range_and_grade(fake_market):
@@ -330,13 +347,15 @@ def test_a_link_opens_the_page_it_names(fake_market):
     """?page=market (or the page title) opens that page directly; the URL then follows page changes."""
     from ui.pages import page_from_url
     assert page_from_url("market") == "Market" and page_from_url("Integrated Stress") == "Integrated Stress"
-    assert page_from_url("event-governance") == "Event & Governance" and page_from_url("nonsense") is None
+    assert page_from_url("event-governance") == "Promoter Pledge & Governance"  # the old link still works
+    assert page_from_url("promoter-pledge-governance") == "Promoter Pledge & Governance"
+    assert page_from_url("market") == "Market" and page_from_url("nonsense") is None
     at = AppTest.from_file("app.py", default_timeout=TIMEOUT)
     at.query_params["page"] = "market"
     at.run()
     assert_clean(at)
     assert at.radio(key="page").value == "Market"
-    assert any("Early warning" in m.value for m in at.markdown)
+    assert any("Signals with a tested record" in m.value for m in at.markdown)
     at.radio(key="page").set_value("Trust")
     at.run()
     assert at.query_params["page"] in ("trust", ["trust"])

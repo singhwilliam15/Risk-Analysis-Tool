@@ -39,6 +39,9 @@ def holding_signals(ticker: str, data: dict, as_of, credit_result: dict, liquidi
         if liquidity_row is not None and indian else None,
         "group": {"group": group, "same_group_holdings": group_counts.get(group, 0)} if group else None,
     }
+    if indian and signals["surveillance"] is None and not data["surveillance"].empty:
+        # The ASM/GSM lists name only the stocks under surveillance: absent from a loaded list = not under surveillance
+        signals["surveillance"] = {"measure": None, "stage": 0, "since": None}
     return signals
 
 
