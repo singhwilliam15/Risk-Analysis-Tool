@@ -324,3 +324,20 @@ def test_network_guard_blocks_outbound_connections():
     import socket
     with pytest.raises(RuntimeError, match="Network access is disabled"):
         socket.create_connection(("query1.finance.yahoo.com", 443), timeout=1)
+
+
+def test_a_link_opens_the_page_it_names(fake_market):
+    """?page=market (or the page title) opens that page directly; the URL then follows page changes."""
+    from ui.pages import page_from_url
+    assert page_from_url("market") == "Market" and page_from_url("Integrated Stress") == "Integrated Stress"
+    assert page_from_url("event-governance") == "Event & Governance" and page_from_url("nonsense") is None
+    at = AppTest.from_file("app.py", default_timeout=TIMEOUT)
+    at.query_params["page"] = "market"
+    at.run()
+    assert_clean(at)
+    assert at.radio(key="page").value == "Market"
+    assert any("Early warning" in m.value for m in at.markdown)
+    at.radio(key="page").set_value("Trust")
+    at.run()
+    assert at.query_params["page"] in ("trust", ["trust"])
+

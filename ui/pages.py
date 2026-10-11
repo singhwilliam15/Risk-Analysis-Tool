@@ -7,6 +7,8 @@ results; and Streamlit's AppTest can switch between radio options, but cannot sw
 st.navigation pages, which would leave the pages untested.
 """
 
+import re
+
 import streamlit as st
 
 OVERVIEW = "Overview"
@@ -20,8 +22,26 @@ DECISIONS = "Decisions"
 TRUST = "Trust"
 PAGES = (OVERVIEW, MARKET, LIQUIDITY, CREDIT, CONCENTRATION, EVENTS, INTEGRATED, DECISIONS, TRUST)
 PAGE_KEY = "page"
+# Shareable links: ?page=market opens the Market page (slugs: overview, market, liquidity, credit,
+# concentration-factors, event-governance, integrated-stress, decisions, trust)
+SLUGS = {p: re.sub(r"[^a-z]+", "-", p.lower()).strip("-") for p in PAGES}
+
+
+def page_from_url(value) -> str:
+    """The page a ?page= value names (slug or title, any case), or None."""
+    if not value:
+        return None
+    wanted = re.sub(r"[^a-z]+", "-", str(value).lower()).strip("-")
+    return next((p for p, slug in SLUGS.items() if slug == wanted), None)
 
 
 def render_navigation() -> str:
-    """The page selector; returns the selected page."""
-    return st.radio("Page", PAGES, horizontal=True, key=PAGE_KEY, label_visibility="collapsed")
+    """The page selector; returns the selected page. The URL's ?page= sets the first page and follows changes."""
+    if PAGE_KEY not in st.session_state:
+        linked = page_from_url(st.query_params.get("page"))
+        if linked:
+            st.session_state[PAGE_KEY] = linked
+    page = st.radio("Page", PAGES, horizontal=True, key=PAGE_KEY, label_visibility="collapsed")
+    if st.query_params.get("page") != SLUGS[page]:
+        st.query_params["page"] = SLUGS[page]  # the address bar always holds a link to this page
+    return page
