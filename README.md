@@ -111,7 +111,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 631 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 635 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).

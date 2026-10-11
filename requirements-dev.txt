@@ -2,3 +2,5 @@
 pytest==9.1.1
 # test_deploy.py: peak memory of the app
 psutil==7.2.2
+# scripts/fetch_announcements.py only (reads announcement PDFs; not run until NSE grants permission)
+pypdf==6.1.1

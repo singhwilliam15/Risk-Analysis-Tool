@@ -6,3 +6,4 @@ venv/
 .streamlit/secrets.toml
 *.xlsx
 data/cache/
+data/raw/

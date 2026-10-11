@@ -9,7 +9,8 @@ import pytest
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = ["README.md", "docs/features.md", "docs/case_studies.md", "docs/methodology.md", "docs/deploy.md",
-        "docs/interview_story.md", "docs/preregistration_warnings_v2.md", "docs/preregistration_events.md"]
+        "docs/interview_story.md", "docs/preregistration_warnings_v2.md", "docs/preregistration_events.md",
+        "docs/data_sources.md", "docs/plans/v6_phase1_manual_checklist.md"]
 STALE = ["is being extended", "Market risk** is complete", "Market risk is complete", "Coming next (Phase 6)",
          "434 tests", "434 offline tests", "measures those links", "until the Phase 7 case studies",
          "banks are not modelled beyond the manual panel",
