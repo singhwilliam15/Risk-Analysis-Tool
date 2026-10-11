@@ -80,3 +80,12 @@ def test_download_keeps_the_original_filing_of_each_quarter():
         {"symbol": "C", "isin": "X3", "date": "31-DEC-2024", "broadcastDate": "21-JAN-2025 10:00:00", "xbrl": "u5.pdf"}])  # no XBRL
     out = FH.original_filings(listing)
     assert out["xbrl"].tolist() == ["u1.xml"]
+
+
+def test_download_keeps_companies_whose_isin_is_blank_apart():
+    """NSE's listing leaves the ISIN blank for some companies (Reliance among them): each keeps its own filing."""
+    listing = pd.DataFrame([
+        {"symbol": "RELIANCE", "isin": None, "date": "30-SEP-2022", "broadcastDate": "23-OCT-2022 07:10:02", "xbrl": "r.xml"},
+        {"symbol": "OTHER", "isin": None, "date": "30-SEP-2022", "broadcastDate": "20-OCT-2022 10:00:00", "xbrl": "o.xml"},
+        {"symbol": "RELIANCE", "isin": None, "date": "30-SEP-2022", "broadcastDate": "05-JAN-2023 10:00:00", "xbrl": "r2.xml"}])
+    assert sorted(FH.original_filings(listing)["xbrl"]) == ["o.xml", "r.xml"]

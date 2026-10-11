@@ -116,7 +116,10 @@ def original_filings(listing: pd.DataFrame) -> pd.DataFrame:
     df["broadcast"] = pd.to_datetime(df["broadcastDate"], format="%d-%b-%Y %H:%M:%S", errors="coerce")
     df = df[df["quarter_end"].notna() & df["broadcast"].notna() & df["xbrl"].fillna("").str.endswith(".xml")]
     df = df[df["quarter_end"].dt.is_quarter_end & (df["quarter_end"] >= FIRST_QUARTER) & (df["quarter_end"] <= LAST_QUARTER)]
-    df = df.sort_values("broadcast").drop_duplicates(["isin", "quarter_end"], keep="first")
+    # The company key: its ISIN, or its symbol where NSE's listing leaves the ISIN blank (Reliance and 76 others);
+    # blank ISINs must not be treated as one company
+    df["company"] = df["isin"].where(df["isin"].notna() & (df["isin"].astype(str).str.strip() != ""), "SYM:" + df["symbol"])
+    df = df.sort_values("broadcast").drop_duplicates(["company", "quarter_end"], keep="first").drop(columns="company")
     return df.sort_values(["quarter_end", "symbol"]).reset_index(drop=True)
 
 

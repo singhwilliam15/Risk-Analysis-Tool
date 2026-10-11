@@ -104,3 +104,16 @@ All are on the same stock-dates:
   them by script, BSE refuses scripts, and the user chose not to collect the pages by hand.
 - **Pledges as distinct from other encumbrances,** before mid-2025.
 - **The disclosure signals other than pledges** (see Rules).
+
+
+## Amendment 1 (11 Oct 2026, during the data download, before any result was computed)
+
+A data-collection bug was found and fixed before the test was run.
+- **The bug:** NSE's filing list leaves the ISIN blank for 77 companies, Reliance among them. The download's
+  "original filing per (ISIN, quarter)" step treated every blank ISIN as one company, so each quarter kept only one
+  of them.
+- **The fix:** the company key is the ISIN, or the symbol where the ISIN is blank (a test covers it). The 1,027
+  missed filings were then downloaded.
+- **Final data:** 27,033 filings read, 140 unreadable (HTTP 404 at NSE, listed in
+  `shareholding_2021_2024_unreadable.csv`).
+- **Rules:** none changed.
