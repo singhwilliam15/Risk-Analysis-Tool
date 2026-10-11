@@ -5,6 +5,7 @@ on:
     branches-ignore: [snapshot-data]  # data only (refresh-snapshot.yml)
     paths-ignore: [data/snapshot/published.json]  # the daily snapshot hash on main
   pull_request:
+  workflow_dispatch:  # run by hand, e.g. when a push was skipped
 
 jobs:
   pytest:
