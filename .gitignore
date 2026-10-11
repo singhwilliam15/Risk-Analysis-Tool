@@ -7,3 +7,9 @@ venv/
 *.xlsx
 data/cache/
 data/raw/
+# NSE data kept local only: NSE's Terms of Use reserve redistribution for its written permission (docs/data_sources.md).
+# Rebuilt by the scripts named there; derived statistics stay committed.
+data/disclosures/history/shareholding_*.csv
+data/disclosures/raw/
+case_studies/data/disclosures/pledges_nse_history_*.csv
+case_studies/data/prices/*.csv

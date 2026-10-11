@@ -40,11 +40,24 @@ repository used a browser User-Agent.
 - the v6 downloaders (`scripts/fetch_archives.py`, `scripts/fetch_announcements.py`, `scripts/nse_client.py`) are
   kept but not run, until permission is granted.
 
-**NSE-derived files in this repository, for the owner to decide on:**
+**NSE-derived files: what was done (11 Oct 2026, branch `final-v6`)**
+
+The bulk NSE datasets that only the research scripts read are **no longer tracked in git**:
+- the shareholding history 2021–2024;
+- the raw ASM, GSM and rating JSON and the pledge scan;
+- the case-study pledge file;
+- DHFL's bhavcopy prices.
+
+They stay on the owner's computer (git-ignored), so every script and re-run still works locally. Earlier commits in
+git history still contain them; rewriting history is a separate decision.
+
+The small current lists the live app reads (price bands, F&O bans, pledges, ratings and surveillance of
+2 Oct 2026) stay committed until NSE replies. They would be removed, or replaced by permitted sources, if
+permission is refused. The table shows each file's status:
 
 | Kind | Files |
 | --- | --- |
-| NSE lists and filings, close to raw | `data/disclosures/` (sec_list, fo_secban, pledges, ratings, surveillance, and `raw/` JSON); `data/disclosures/history/shareholding_2021_2024*.csv`; `case_studies/data/disclosures/pledges_nse_history_2021_2024.csv`; `case_studies/data/prices/DHFL.csv` (bhavcopy prices) |
+| NSE lists and filings, close to raw | **Untracked, kept locally:** `data/disclosures/raw/`, `data/disclosures/history/shareholding_2021_2024*.csv`, `case_studies/data/disclosures/pledges_nse_history_2021_2024.csv`, `case_studies/data/prices/DHFL.csv`. **Still committed, pending NSE's reply:** `data/disclosures/` current lists (sec_list, fo_secban, pledges, ratings, surveillance) |
 | Values taken from company filings on NSE | `data/banks/*.csv` (results XBRL and annual reports); `case_studies/data/fundamentals/*.csv` (annual reports) |
 | Small test excerpts | `test_data/nse/*` |
 | Derived statistics only | `case_studies/results/*` (lifts, counts, rates); `case_studies/results/warnings_v2_reference.json` (ES percentiles) |

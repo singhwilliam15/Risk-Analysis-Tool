@@ -1,5 +1,9 @@
 # Disclosure data (India)
 
+> **Redistribution:** NSE's Terms of Use reserve redistribution of its content for NSE's written permission (see
+> [docs/data_sources.md](../../docs/data_sources.md)). The raw JSON in `raw/` and the 2021–2024 shareholding history are
+> kept locally only; the small current lists below stay committed until NSE replies to the permission request.
+
 The event, credit and liquidity pillars use Indian disclosure data from **official sources only**. The tool never estimates or fills in these figures.
 
 ## Bundled snapshot and refresh

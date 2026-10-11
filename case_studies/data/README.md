@@ -5,7 +5,7 @@ files from the checklist in `docs/case_studies.md` here, then run `python case_s
 
 | Folder | What goes in it | Format |
 | --- | --- | --- |
-| `prices/` | Daily prices for a stock Yahoo no longer has (DHFL) | `<TICKER>.csv` with columns `Date, Open, High, Low, Close, Volume`. `DHFL.csv` is built from NSE's own daily bhavcopies, back-adjusted as in the wider test: `python scripts/build_case_prices.py DHFL` |
+| `prices/` | Daily prices for a stock Yahoo no longer has (DHFL) | `<TICKER>.csv` with columns `Date, Open, High, Low, Close, Volume`. `DHFL.csv` is built locally from NSE's own daily bhavcopies, back-adjusted as in the wider test (`python scripts/build_case_prices.py DHFL`). It is not committed, because NSE's terms reserve redistribution (docs/data_sources.md) |
 | `fundamentals/` | Annual statements for the years before each event | `<TICKER>.csv` in the app's fundamentals template (Overview → Fundamentals → Download template), e.g. `ZEEL.NS.csv`; include `shares_issued`, both debt lines, and the filing date if you know it |
 | `disclosures/` | Pledges, surveillance lists, F&O ban files, rating actions, auditor events | The same files and templates as `data/disclosures/`, each listed in `disclosures/manifest.json` with its source URL and download date |
 
