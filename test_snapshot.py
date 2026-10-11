@@ -3,9 +3,9 @@ Demo snapshot (ui/snapshot.py, review P4): stable keys, hits and misses, version
 running the whole app offline.
 """
 
-import gzip
+import hashlib
+import json
 import os
-import pickle
 import subprocess
 import sys
 
@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ui import snapshot
+from ui import snapshot, snapshot_format
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,14 +23,13 @@ def store(tmp_path, monkeypatch):
     """A small snapshot file in tmp_path, switched on for this test only."""
     monkeypatch.delenv(snapshot.DISABLE_ENV, raising=False)
     monkeypatch.delenv(snapshot.RECORD_ENV, raising=False)
-    path = tmp_path / "snapshot.pkl.gz"
+    path = tmp_path / "snapshot.zip"
     monkeypatch.setattr(snapshot, "PATH", path)
     snapshot.reset()
 
     def write(data: dict, meta: dict = None):
-        with gzip.open(path, "wb") as f:
-            pickle.dump({"meta": meta or {**snapshot.versions(), "prices_as_of": "2026-09-30", "built": "2026-10-03"},
-                         "data": data}, f)
+        path.write_bytes(snapshot_format.dumps(
+            {"meta": meta or {**snapshot.versions(), "prices_as_of": "2026-09-30", "built": "2026-10-03"}, "data": data}))
         snapshot.reset()
     yield write
     snapshot.reset()
@@ -103,20 +102,25 @@ def test_compatible_checks_pandas_and_numpy_major():
     assert not snapshot.compatible({"pandas": "1.5.3", "numpy": now["numpy"]})
 
 
-def published(monkeypatch, data: dict, prices_as_of: str, sha256: str = None, meta: dict = None):
-    """Serve a published snapshot (meta.json + snapshot.pkl.gz) from memory; returns the list of fetched URLs."""
-    import hashlib
-    import json
+def published(monkeypatch, data: dict, prices_as_of: str, sha256: str = None, meta: dict = None, blob: bytes = None):
+    """
+    Serve a published snapshot from memory: the zip on the data branch and published.json (with the sha256) on main.
+    Returns the list of fetched file names.
+    """
     meta = meta or {**snapshot.versions(), "prices_as_of": prices_as_of, "built": prices_as_of + "T18:40:00"}
-    blob = gzip.compress(pickle.dumps({"meta": meta, "data": data}))
-    files = {"meta.json": json.dumps({**meta, "sha256": sha256 or hashlib.sha256(blob).hexdigest()}).encode(),
-             "snapshot.pkl.gz": blob}
+    blob = blob if blob is not None else snapshot_format.dumps({"meta": meta, "data": data})
+    files = {"main/published.json": json.dumps({**meta, "sha256": sha256 or hashlib.sha256(blob).hexdigest()}).encode(),
+             "snapshot-data/snapshot.zip": blob}
     fetched = []
 
     def fetch(url, timeout):
-        fetched.append(url.rsplit("/", 1)[-1])
-        return files[url.rsplit("/", 1)[-1]]
+        name = "/".join(url.rsplit("/", 2)[-2:])
+        fetched.append(name.rsplit("/", 1)[-1])
+        if name not in files:
+            raise OSError(f"404 {url}")
+        return files[name]
     monkeypatch.setenv(snapshot.REMOTE_ENV, "https://example.invalid/snapshot-data/")
+    monkeypatch.setenv(snapshot.HASH_ENV, "https://example.invalid/main/published.json")
     monkeypatch.setattr(snapshot, "_fetch", fetch)
     return fetched
 
@@ -134,18 +138,19 @@ def test_newer_published_snapshot_replaces_the_bundled_one(store, monkeypatch):
     fetched = published(monkeypatch, {"k": "published"}, "2026-10-05")
     assert snapshot.load()["data"] == {"k": "published"}
     assert snapshot.meta()["prices_as_of"] == "2026-10-05"
-    assert fetched == ["meta.json", "snapshot.pkl.gz"]
+    assert fetched == ["published.json", "snapshot.zip"]  # the hash from main first, then the zip
     snapshot.load()
-    assert fetched == ["meta.json", "snapshot.pkl.gz"]  # not checked again within REMOTE_EVERY
+    assert fetched == ["published.json", "snapshot.zip"]  # not checked again within REMOTE_EVERY
     monkeypatch.setattr(snapshot, "_checked", snapshot._checked - snapshot.REMOTE_EVERY)
     snapshot.load()
-    assert fetched[-1] == "meta.json" and len(fetched) == 3  # checked again; same snapshot, so not downloaded
+    assert fetched[-1] == "published.json" and len(fetched) == 3  # checked again; same snapshot, so not downloaded
 
 
 def test_published_snapshot_is_ignored_when_older_corrupt_incompatible_or_offline(store, monkeypatch):
     store({"k": "bundled"})  # prices to 2026-09-30
     for kwargs in ({"prices_as_of": "2026-09-29"},                                 # older
-                   {"prices_as_of": "2026-10-05", "sha256": "0" * 64},             # checksum mismatch
+                   {"prices_as_of": "2026-10-05", "sha256": "0" * 64},             # not the zip main vouches for
+                   {"prices_as_of": "2026-10-05", "blob": b"not a zip"},             # garbage, with a matching hash
                    {"prices_as_of": "2026-10-05", "meta": {"pandas": "0.0.1", "numpy": "1.0",
                                                            "prices_as_of": "2026-10-05"}}):  # other versions
         snapshot.reset()
@@ -168,7 +173,53 @@ def test_published_snapshot_is_used_when_none_is_bundled(store, monkeypatch):
     assert snapshot.load()["data"] == {"k": "published"}
 
 
-BUNDLED = os.path.join(ROOT, "data", "snapshot", "snapshot.pkl.gz")
+def test_a_zip_changed_on_the_data_branch_is_rejected(store, monkeypatch):
+    """Tampering: the data branch serves a different (even valid) zip than the one whose hash main committed."""
+    store({"k": "bundled"})
+    genuine = {**snapshot.versions(), "prices_as_of": "2026-10-05", "built": "2026-10-05T18:40:00"}
+    forged = snapshot_format.dumps({"meta": genuine, "data": {"k": "forged"}})
+    published(monkeypatch, {"k": "genuine"}, "2026-10-05", meta=genuine)  # main's hash is the genuine zip's
+    real_fetch = snapshot._fetch
+    monkeypatch.setattr(snapshot, "_fetch", lambda url, timeout: forged if url.endswith("snapshot.zip") else real_fetch(url, timeout))
+    assert snapshot.load()["data"] == {"k": "bundled"}
+
+
+def test_missing_hash_on_main_means_no_download(store, monkeypatch):
+    store({"k": "bundled"})
+    fetched = published(monkeypatch, {"k": "published"}, "2026-10-05")
+    monkeypatch.setenv(snapshot.HASH_ENV, "https://example.invalid/main/missing.json")
+    assert snapshot.load()["data"] == {"k": "bundled"} and "snapshot.zip" not in fetched
+
+
+def test_the_loader_never_unpickles():
+    for path in ("ui/snapshot.py", "ui/snapshot_format.py"):
+        text = open(os.path.join(ROOT, path), encoding="utf-8").read()
+        assert "pickle.load" not in text and "pickle.loads" not in text and "gzip" not in text, path
+
+
+def test_format_round_trips_every_kind_exactly(tmp_path):
+    from garch import GarchParams
+    days = pd.date_range("2026-01-01", periods=4).as_unit("s")
+    frame = pd.DataFrame({"Date": days, "Close": [1.0, np.nan, 3.0, 4.0], "Name": ["a", "b", "c", "d"],
+                          "Volume": [1, 2, 3, 4], "Flag": [True, False, True, False]})
+    data = {"k1": {"frame": frame, "series": pd.Series([0.1, 0.2], index=pd.Index(["x", "y"]), name="r"),
+                   "dated": pd.Series([1.0, 2.0, 3.0, 4.0], index=pd.DatetimeIndex(days)),
+                   "nd": np.arange(6.0).reshape(2, 3), "np": np.float64(0.25), "flag": np.bool_(True), "py": 0.1 + 0.2,
+                   "inf": float("inf"), "ts": pd.Timestamp("2026-10-02").as_unit("s"), "garch": GarchParams(0.1, 0.02, 0.05, 0.9, 6.0),
+                   "tuple": (1, "a", None), "list": [1, 2.5], 5: "int key", (0.25, True): "tuple key", "__t": "a real key",
+                   "empty": pd.DataFrame(index=pd.RangeIndex(3))}}
+    back = snapshot_format.loads(snapshot_format.dumps({"meta": {"m": 1}, "data": data}))
+    assert back["meta"] == {"m": 1}
+    b, a = back["data"]["k1"], data["k1"]
+    assert snapshot.key("f", (a,), {}) == snapshot.key("f", (b,), {})
+    assert b["frame"]["Date"].dtype == "datetime64[s]" and b["dated"].index.dtype == "datetime64[s]"
+    assert type(b["np"]) is np.float64 and type(b["flag"]) is np.bool_ and b["py"] == 0.1 + 0.2 and b["inf"] == float("inf")
+    assert b["ts"].unit == "s" and b["garch"] == a["garch"] and b["tuple"] == (1, "a", None)
+    assert b[5] == "int key" and b[(0.25, True)] == "tuple key" and b["__t"] == "a real key"
+    assert b["empty"].shape == (3, 0)
+
+
+BUNDLED = os.path.join(ROOT, "data", "snapshot", "snapshot.zip")
 
 
 @pytest.mark.skipif(not os.path.exists(BUNDLED), reason="no bundled snapshot (scripts/build_snapshot.py)")
@@ -199,3 +250,18 @@ def test_bundled_snapshot_runs_every_page_offline(monkeypatch):
         assert snapshot.misses() == [], f"computed live instead of from the snapshot: {sorted(set(snapshot.misses()))}"
     snapshot.reset()
     st.cache_data.clear()
+
+
+@pytest.mark.skipif(not os.path.exists(BUNDLED), reason="no bundled snapshot (scripts/build_snapshot.py)")
+def test_bundled_snapshot_entries_keep_their_hash_through_the_format():
+    first = snapshot_format.loads(open(BUNDLED, "rb").read())
+    again = snapshot_format.loads(snapshot_format.dumps(first))
+    assert first["meta"] == again["meta"] and set(first["data"]) == set(again["data"])
+    for k, v in first["data"].items():
+        assert snapshot.key("x", (v,), {}) == snapshot.key("x", (again["data"][k],), {}), k
+
+
+def test_published_json_on_main_describes_the_bundled_zip():
+    published = os.path.join(ROOT, "data", "snapshot", "published.json")
+    info = json.loads(open(published, encoding="utf-8").read())
+    assert set(info) >= {"sha256", "prices_as_of", "built", "pandas", "numpy"}

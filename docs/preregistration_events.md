@@ -1,6 +1,6 @@
 # Pre-registration: the event pillar on every NSE stock, 2021–2024
 
-Written and committed on 10 Oct 2026, **before** any result of this test was computed (NEXT_STEPS_V5.md, Phase G,
+Written and committed on 10 Oct 2026, **before** any result of this test was computed ([NEXT_STEPS_V5.md](plans/NEXT_STEPS_V5.md), Phase G,
 step 4). The code (`event_universe.py`, `scripts/run_event_test.py`) and its tests are in the same commit. The
 shareholding data were still downloading at the time, so no outcome had been looked at. Nothing below changes
 after results are seen. Any bug fix goes in a separate commit, with the results shown before and after.

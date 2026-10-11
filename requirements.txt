@@ -10,6 +10,8 @@ arch==8.0.0
 yfinance==1.7.0
 plotly==7.1.0
 openpyxl==3.1.5
+# Demo snapshot tables (Parquet, ui/snapshot_format.py); also a Streamlit dependency
+pyarrow==25.0.1
 # CRO memo PDF: reportlab is pure Python; matplotlib has wheels for 3.11 and 3.12 (Windows, Linux, macOS)
 reportlab==5.0.1
 matplotlib==3.11.2

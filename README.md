@@ -26,7 +26,7 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
    [Case studies](docs/case_studies.md#does-it-beat-a-naive-rule-review-m1)
 2. **On every NSE stock from 2016 to 2024 (2,315 stocks, delisted ones included), the price flags barely beat
    chance.** Their lift is 1.13 for a 50% fall within a year. "Down 30% in six months" does twice as well (2.24).
-   The cause is one threshold: the 5% daily-ES floor, set with large caps in mind, fires on 72% of all NSE
+   The cause is one threshold: the 5% daily-ES floor, set with large caps in mind, fires on 73% of all NSE
    stock-dates.
    - It was not re-tuned after the fact. Instead, four new rules were tested out of sample under a pre-registration:
      designed on 2016–18, tested once on 2020–24.
@@ -39,10 +39,11 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
    [Warnings v2](docs/case_studies.md#warnings-v2-out-of-sample-test-october-2026) [Wider test](docs/case_studies.md#wider-test-every-nse-stock-20162024-review-m1)
 3. **Cross-pillar effects appear only where the data create them.** Pledge selling and circuit locks move the price
    round after round, and the loss is split by exact Shapley values.
-   - With real NSE pledge data, the 5-stock portfolio's Global Financial Crisis replay gains a +₹5,145 interaction
+   - With real NSE pledge data, the 5-stock portfolio's Global Financial Crisis replay gains a +₹5,222 interaction
      over 4 rounds (₹4.89 lakh loss on ₹10 lakh).
-   - Jaiprakash Power, with 73% of promoter shares pledged, loses ₹6.44 lakh on a −20% market move, against
-     ₹2.17 lakh from the market alone.
+   - Jaiprakash Power, with 73% of promoter shares pledged, loses ₹6.46 lakh on a −20% market move, against
+     ₹2.19 lakh from the market alone.
+   - Both use prices to 9 Oct 2026 and NSE's pledge, band and rating files of 2 Oct 2026.
    - Without pledges the interaction is zero, and the page says so.
 4. **Banks are measured against RBI's own triggers.**
    - HDFC Bank sits 5.62 pp clear of every Prompt Corrective Action threshold.
@@ -97,10 +98,10 @@ Tickers use Yahoo Finance symbols: `RELIANCE.NS` (NSE), `.BO` (BSE), `AAPL` (US)
 
 | Run | First page | All 9 pages | Peak memory |
 | --- | --- | --- | --- |
-| Demo snapshot (default portfolio) | 9 s | 28 s | 299 MB |
-| Live downloads and calculations | 85 s | 119 s | 326 MB |
+| Demo snapshot (default portfolio) | 7 s | 28 s | 377 MB |
+| Live downloads and calculations | 59 s | 80 s | 369 MB |
 
-Measured cold on a laptop with `scripts/measure_app.py`. Streamlit Community Cloud allows at least 690 MB, and
+Measured cold on a laptop with `scripts/measure_app.py` on 11 Oct 2026. Streamlit Community Cloud allows at least 690 MB, and
 `test_deploy.py` checks the snapshot run stays under it.
 
 ## Tests
@@ -110,7 +111,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 584 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 630 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).
@@ -130,7 +131,8 @@ reference: a closed form, a large simulation, a hand calculation or a known true
 - Long-only, single-currency portfolios.
 - Merton PDs are risk-neutral.
 - Price bands and pledges are a dated snapshot of NSE files.
-- The event tiers' jump risk cannot be calibrated on disclosure data (NSE's pledge history starts in 2021).
+- The event tiers' jump risk is calibrated on disclosure data for 2021–2024 only (NSE's pledge history starts in
+  September 2021), and pledges are measured together with other encumbrances before mid-2025.
 - The wider test covers price-based flags only.
 
 The full list is in [features.md](docs/features.md#limitations).

@@ -182,7 +182,7 @@ def statement_table(fund: dict, statement: str) -> pd.DataFrame:
 def public_date(period_end, filing_date=None) -> pd.Timestamp:
     """
     The first date a figure may be used in an "as of" analysis: its filing date if known, otherwise
-    the fiscal year end plus FILING_LAG_DAYS (the point-in-time rule in RISK_TOOL_PLAN_V3.md).
+    the fiscal year end plus FILING_LAG_DAYS (the point-in-time rule in docs/plans/RISK_TOOL_PLAN_V3.md).
     """
     if filing_date is not None and not pd.isna(filing_date):
         return pd.Timestamp(filing_date).normalize()

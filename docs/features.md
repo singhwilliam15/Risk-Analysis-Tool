@@ -378,7 +378,7 @@ data/disclosures/      Bundled NSE snapshot (raw JSON in raw/), manifest.json, t
 data/credit/           Agency default-rate tables (CRISIL, ICRA FY2025 studies) and the DD reference universe
 excel_exporter.py      Formatted Excel report
 docs/                  methodology.md (formulas, references), case_studies.md (evidence), features.md, deploy.md, interview_story.md
-RISK_TOOL_PLAN_V3.md   The roadmap, phase by phase
+docs/plans/            The roadmaps and reviews, phase by phase (RISK_TOOL_PLAN_V3, REVIEW_FIXES_V4, NEXT_STEPS_V5)
 test_*.py, conftest.py Tests, synthetic market data and the network guard
 test_data/             Saved yfinance statements used as test fixtures
 .github/workflows/     CI: pytest on Python 3.11 and 3.12

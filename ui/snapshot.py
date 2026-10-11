@@ -2,32 +2,32 @@
 Demo snapshot (review P4): precomputed results for the presets, so the hosted app answers instantly.
 
 - `scripts/build_snapshot.py` runs the app on every preset with the default settings and records the downloads and
-  the result of every heavy cached function in data/snapshot/snapshot.pkl.gz, with the date of the last price.
+  the result of every heavy cached function in data/snapshot/snapshot.zip, with the date of the last price.
 - In "Demo snapshot" mode (the default when the file is present), downloads come from the snapshot, so the heavy
   functions see the same inputs and their stored results are reused. A ticker or setting that is not in the snapshot
   is downloaded and computed live as usual.
 - Heavy results are keyed on a hash of their inputs, not on the mode, so a stored result is only ever returned for
   exactly the inputs it was computed from.
 
-- Daily refresh: .github/workflows/refresh-snapshot.yml rebuilds the snapshot after each NSE session and publishes
-  it with a meta.json (its meta plus a sha256) on the `snapshot-data` branch of this repository. The running app
-  checks that meta.json every REMOTE_EVERY seconds and swaps in a newer snapshot, so the hosted demo moves to the
-  last trading day without a redeploy. The copy bundled in the repository is the fallback.
+- Daily refresh: .github/workflows/refresh-snapshot.yml rebuilds the snapshot after each NSE session, publishes the
+  zip on the `snapshot-data` branch, and commits its sha256 (with its meta) to data/snapshot/published.json on
+  `main`. Every REMOTE_EVERY seconds the app reads main's published.json; if it describes a newer snapshot, the app
+  downloads the zip from `snapshot-data` and swaps it in only if its sha256 matches the one committed on main. The
+  copy bundled in the repository is the fallback.
 
-The file is a pickle written by our own build script, either shipped in the repository or published by the
-repository's own workflow (checked against the sha256 in meta.json); it is never loaded from anywhere else. It is
-ignored (live mode) if it is missing, or was built with a different pandas or numpy major version, or if
-RISK_TOOL_NO_SNAPSHOT is set (the test suite sets it). RISK_TOOL_SNAPSHOT_URL="" turns the refresh off.
+Integrity (Phase H): the file is a zip of JSON and Parquet (ui/snapshot_format.py), so loading it never runs code,
+and a file changed on the data branch alone is rejected, because the hash it must match lives on `main`. The
+snapshot is ignored (live mode) if it is missing, or was built with a different pandas or numpy major version, or
+if RISK_TOOL_NO_SNAPSHOT is set (the test suite sets it). RISK_TOOL_SNAPSHOT_URL="" turns the refresh off.
 """
 
 import copy
 import functools
-import gzip
 import hashlib
 import inspect
 import json
 import os
-import pickle
+import pickle  # only to hash unhashable table cells in key(); never to load data
 import platform
 import threading
 import time
@@ -37,12 +37,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-PATH = Path(__file__).resolve().parent.parent / "data" / "snapshot" / "snapshot.pkl.gz"
+from ui import snapshot_format
+
+PATH = Path(__file__).resolve().parent.parent / "data" / "snapshot" / "snapshot.zip"
 SNAPSHOT, LIVE = "snapshot", "live"
 MODE_KEY = "data_mode"  # session-state key of the sidebar choice
 RECORD_ENV, DISABLE_ENV = "RISK_TOOL_SNAPSHOT_RECORD", "RISK_TOOL_NO_SNAPSHOT"
 REMOTE_ENV = "RISK_TOOL_SNAPSHOT_URL"
 REMOTE_URL = "https://raw.githubusercontent.com/singhwilliam15/Risk-Analysis-Tool/snapshot-data/"
+HASH_ENV = "RISK_TOOL_SNAPSHOT_HASH_URL"  # where the expected sha256 is committed: main, not the data branch
+HASH_URL = "https://raw.githubusercontent.com/singhwilliam15/Risk-Analysis-Tool/main/data/snapshot/published.json"
 REMOTE_EVERY = 15 * 60  # seconds between checks for a newer published snapshot
 
 _lock = threading.Lock()
@@ -99,7 +103,7 @@ def versions() -> dict:
 
 
 def compatible(meta: dict) -> bool:
-    """Same pandas version and numpy major version as the build (pickles of pandas objects need the former)."""
+    """Same pandas version and numpy major version as the build (the stored results' input hashes need them)."""
     now = versions()
     return meta.get("pandas") == now["pandas"] and str(meta.get("numpy", "")).split(".")[0] == now["numpy"].split(".")[0]
 
@@ -128,21 +132,28 @@ def _fetch(url: str, timeout: float) -> bytes:
         return response.read()
 
 
+def hash_url() -> str:
+    return os.environ.get(HASH_ENV, HASH_URL)
+
+
 def _published(current: dict):
-    """The published snapshot if it is newer than `current`, compatible and intact; otherwise None."""
+    """
+    The published snapshot if main's published.json says it is newer than `current`, the zip downloaded from the
+    data branch has exactly the sha256 committed on main, and its versions are compatible; otherwise None.
+    """
     base = remote_url()
     if not base:
         return None
     try:
-        info = json.loads(_fetch(base + "meta.json", timeout=5))
-        if not compatible(info) or not newer(info, current):
+        expected = json.loads(_fetch(hash_url(), timeout=5))
+        if not compatible(expected) or not newer(expected, current):
             return None
-        blob = _fetch(base + "snapshot.pkl.gz", timeout=60)
-        if hashlib.sha256(blob).hexdigest() != info.get("sha256"):
-            return None
-        store = pickle.loads(gzip.decompress(blob))
+        blob = _fetch(base + "snapshot.zip", timeout=60)
+        if hashlib.sha256(blob).hexdigest() != expected.get("sha256"):
+            return None  # not the file main vouches for: tampered, partial, or published without its hash
+        store = snapshot_format.loads(blob)
         return store if compatible(store.get("meta", {})) and newer(store["meta"], current) else None
-    except Exception:  # offline, not published yet, or a partial upload: keep what we have
+    except Exception:  # offline, not published yet, or unreadable: keep what we have
         return None
 
 
@@ -174,8 +185,7 @@ def load(path: Path = None):
             store = {}
             if path.exists():
                 try:
-                    with gzip.open(path, "rb") as f:
-                        candidate = pickle.load(f)
+                    candidate = snapshot_format.loads(path.read_bytes())
                     store = candidate if compatible(candidate.get("meta", {})) else {}
                 except Exception:
                     store = {}
@@ -239,8 +249,7 @@ def save(path: Path = None, prices_as_of=None) -> dict:
             "entries": len(_recorded)}
     path = Path(path or PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wb", compresslevel=9) as f:
-        pickle.dump({"meta": info, "data": dict(_recorded)}, f, protocol=4)
+    path.write_bytes(snapshot_format.dumps({"meta": info, "data": dict(_recorded)}))
     return info
 
 

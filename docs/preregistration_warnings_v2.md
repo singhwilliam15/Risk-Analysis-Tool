@@ -1,7 +1,7 @@
 # Pre-registration: early-warning rules v2 (out-of-sample test)
 
 Written and committed on 10 Oct 2026, **before** any result was computed on the design or the test period
-(NEXT_STEPS_V5.md, Phase F). The code that implements it (`warnings_v2.py`, `universe.py`,
+([NEXT_STEPS_V5.md](plans/NEXT_STEPS_V5.md), Phase F). The code that implements it (`warnings_v2.py`, `universe.py`,
 `scripts/run_universe.py`) and its tests (`test_warnings_v2.py`) are in the same commit. Nothing below will change
 after test results are seen. If a bug is found later, it will be fixed in a separate commit and the report will
 show the results before and after the fix.

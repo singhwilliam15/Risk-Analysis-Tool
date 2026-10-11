@@ -1,6 +1,6 @@
 # Methodology
 
-This document describes every calculation in the Risk Analysis Tool: the eight market-risk models, the multi-day rules, the backtests, the model-selection rule, the portfolio risk decomposition, the stress tests, and the data layer that every risk pillar shares (positions, prices and volume, fundamentals, disclosures and data quality), the trust layer (90% ranges, model risk and A–D grades), the liquidity, credit, concentration and factor, and event and governance pillars, the integrated stress engine and the decision layer. Section numbers match the code modules named in each heading. The pillars still to come (liquidity, credit, concentration, event risk, integration) are planned in `RISK_TOOL_PLAN_V3.md` and will be documented here as they are built.
+This document describes every calculation in the Risk Analysis Tool: the eight market-risk models, the multi-day rules, the backtests, the model-selection rule, the portfolio risk decomposition, the stress tests, and the data layer that every risk pillar shares (positions, prices and volume, fundamentals, disclosures and data quality), the trust layer (90% ranges, model risk and A–D grades), the liquidity, credit, concentration and factor, and event and governance pillars, the integrated stress engine and the decision layer. Section numbers match the code modules named in each heading. The roadmaps and reviews that led here are in [docs/plans/](plans/), and the evidence in [case_studies.md](case_studies.md).
 
 **Notation.** `r_t` is the simple daily return on day t. α = 1 − confidence level is the tail probability (α = 0.01 for 99%). Losses are positive numbers, so VaR and ES are reported as positive amounts. `z = Φ⁻¹(1 − α)` is the standard normal quantile and φ is the normal density. μ and σ are the sample mean and standard deviation of daily returns. `t` (in multi-day formulas) is the holding period in days.
 
@@ -867,23 +867,31 @@ The full design is in [preregistration_warnings_v2.md](preregistration_warnings_
 
 ## 16. Demo snapshot (`ui/snapshot.py`, `scripts/build_snapshot.py`)
 
-- **Built by running the app.** The build runs every preset (5 NSE stocks, 3 US stocks and the default portfolio) on every page with the default settings. It records each download and each heavy cached result in `data/snapshot/snapshot.pkl.gz`, keyed by a SHA-256 of its arguments:
+- **Built by running the app.** The build runs every preset (5 NSE stocks, 3 US stocks and the default portfolio) on every page with the default settings. It records each download and each heavy cached result in `data/snapshot/snapshot.zip`, keyed by a SHA-256 of its arguments:
   - frames and series through `pd.util.hash_pandas_object` with their column names, dtypes and shape;
   - dicts in sorted key order;
   - arguments bound to the function's signature, so positional and keyword calls share a key.
 - **Downloads come from the snapshot in snapshot mode.** The heavy functions therefore see identical inputs and reuse their stored results. Anything else (a new ticker, a changed setting) misses and is computed live.
 - **Results are keyed on inputs only, never on the mode.** A stored result is only ever returned for exactly the inputs it was computed from.
 - **When the snapshot is ignored:** if it was built with another pandas version or numpy major version, or if `RISK_TOOL_NO_SNAPSHOT` is set (the test suite sets it).
-- **Daily refresh.** `.github/workflows/refresh-snapshot.yml` rebuilds the snapshot after each NSE session and publishes it, with a `meta.json` holding its SHA-256, on the `snapshot-data` branch. Every 15 minutes the app checks `meta.json` and swaps in the published snapshot only if all of these hold:
+- **File format (October 2026, Phase H).** The snapshot is a zip with three parts, read with `json` and `pandas.read_parquet` only, so loading it never runs code (`ui/snapshot_format.py`):
+  - `meta.json`;
+  - `tree.json`: the stored results as tagged JSON (tuples, non-string keys, numpy scalars with their dtype, timestamps with their unit, GARCH parameters);
+  - one Parquet file per DataFrame, Series or array.
+
+  Each table's exact dtypes and index are recorded and restored, because Parquet stores `datetime64[s]` as milliseconds and the lookups hash the exact inputs. A test checks that every entry round-trips to the same hash. The zip is 12.9 MB, against 8.7 MB for the old pickle.
+- **Daily refresh.** `.github/workflows/refresh-snapshot.yml` rebuilds the snapshot after each NSE session, publishes the zip on the `snapshot-data` branch, and commits its SHA-256 to `data/snapshot/published.json` on `main`. Every 15 minutes the app reads that file from `main` and swaps in the published zip only if all of these hold:
   - its prices are later (or, on the same prices, it was built later);
   - its versions are compatible;
-  - its checksum matches.
+  - its SHA-256 equals the one committed on `main`, so a file changed on the data branch alone is rejected.
 
   Otherwise the app keeps what it has. The test suite turns the check off (`RISK_TOOL_SNAPSHOT_URL=""`).
 - **Tests:**
   - keys are stable across processes, ignore dict order and change with any value;
   - hits, misses and the live switch work as intended, and a caller's changes to a snapshot download do not reach the store;
   - the bundled snapshot renders every page of the default portfolio with the network blocked and no live calculation;
+  - every kind of stored value round-trips exactly through the zip format, and every entry of the bundled snapshot keeps its hash;
+  - a zip that does not match main's hash, a missing hash, a non-zip file and incompatible versions are all rejected, and the loader never unpickles;
   - `test_deploy.py` checks the cold-start peak memory against Streamlit Community Cloud's 690 MB minimum.
 
 ## References

@@ -2,7 +2,7 @@
 
 A script to say out loud: about 330 words, roughly two minutes at a natural pace. Every number is from the runs of
 2–3 Oct 2026 (README, `docs/case_studies.md`). It was rewritten after an external review that found the first
-version over-claimed; the review and its fixes are in `REVIEW_FIXES_V4.md`.
+version over-claimed; the review and its fixes are in `docs/plans/REVIEW_FIXES_V4.md`.
 
 ---
 
@@ -14,7 +14,7 @@ down further. I wanted a tool that models that spiral, and that says how far eac
 
 **2. What I built (40 seconds)**
 
-It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 584 offline tests.
+It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 630 offline tests.
 
 - **Five pillars** (market, liquidity, credit, concentration, and event risk), plus a check of banks against RBI's
   Prompt Corrective Action triggers.
@@ -31,7 +31,7 @@ inside RBI's first PCA threshold six months before its moratorium.
 
 Then I checked it against simple rules. "Price below its 200-day average" also caught 18 of 24, with nearly three times
 the false alarms, so my edge there is precision. On every NSE stock from 2016 to 2024, delisted ones included, my
-price flags barely beat chance: one tail-risk threshold, set with large caps in mind, fires on 72% of all NSE stock-days. "Down 30% in six months"
+price flags barely beat chance: one tail-risk threshold, set with large caps in mind, fires on 73% of all NSE stock-days. "Down 30% in six months"
 did twice as well. I reported that rather than re-tuning after the fact. Then I tested four new rules the way a
 researcher would: I wrote down the rules and the pass mark first, designed on 2016–18 and tested once on 2020–24.
 The best one scored higher than momentum, but not by a margin the test could confirm, so the app still uses the old

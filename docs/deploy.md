@@ -11,7 +11,7 @@ The entry point is `app.py`, the requirements are pinned and no secrets are need
    pandas version (pinned) and numpy major version, and is ignored otherwise.
 5. Click **Deploy**. The first build takes a few minutes.
 
-**Demo snapshot.** The repository ships `data/snapshot/snapshot.pkl.gz`: the presets with the default settings,
+**Demo snapshot.** The repository ships `data/snapshot/snapshot.zip`: the presets with the default settings,
 computed in advance (`scripts/build_snapshot.py`). The app opens on it, so the hosted demo answers at once instead
 of downloading and fitting models on Streamlit's small CPU allocation. **Data → Live** in the sidebar switches to
 today's prices; any other ticker or setting is computed live either way. Rebuild the snapshot to move its date
@@ -24,10 +24,21 @@ pytest test_snapshot.py test_deploy.py
 
 **Daily refresh.** You don't need to rebuild by hand to keep the date current. `.github/workflows/refresh-snapshot.yml`
 runs Monday to Friday at 18:00 IST, after NSE closes at 15:30. It rebuilds the snapshot from `main`, checks it
-offline (`test_snapshot.py`, `test_deploy.py`) and publishes it on the `snapshot-data` branch. That branch holds
-`snapshot.pkl.gz`, a `meta.json` with its sha256, and a single commit that is replaced on every publish, so the
-repository does not grow. The running app reads `meta.json` every 15 minutes and swaps in a newer snapshot. The
-sidebar's "Demo snapshot (date)" then moves to the last trading day without a redeploy or reboot. Details:
+offline (`test_snapshot.py`, `test_deploy.py`) and publishes `snapshot.zip` on the `snapshot-data` branch. That
+branch has a single commit, replaced on every publish, so the repository does not grow. It then commits the zip's
+sha256 to `data/snapshot/published.json` on **`main`**: one small bot commit per trading day, marked `[skip ci]`.
+
+Every 15 minutes the running app reads `published.json` from `main`. If it describes a newer snapshot, the app
+downloads the zip from `snapshot-data` and accepts it only if its sha256 matches. The sidebar's "Demo snapshot
+(date)" then moves to the last trading day.
+
+**Why it is built this way (security):**
+- The snapshot is a zip of JSON and Parquet (`ui/snapshot_format.py`), never a pickle, so loading it cannot run
+  code.
+- The hash it must match is committed on `main`, not next to the data, so a file changed on the data branch alone
+  is rejected.
+
+Details:
 
 - **Market holidays:** the prices don't move, so nothing is published.
 - **If a build fails** (for example, Yahoo Finance refuses the runner), the app keeps the last published snapshot,
@@ -35,6 +46,7 @@ sidebar's "Demo snapshot (date)" then moves to the last trading day without a re
 - **US presets** show their previous session's close, which is their last completed session at 18:00 IST.
 - **To run it now:** GitHub → **Actions** → **refresh snapshot** → **Run workflow** (tick *force* to publish even
   when the prices are not newer).
+- **Pulling `main` locally:** expect a bot commit of `data/snapshot/published.json` on each trading day.
 - **Turning it off:** setting `RISK_TOOL_SNAPSHOT_URL=""` switches the app's check off. GitHub pauses scheduled
   workflows in a public repository after 60 days without activity; re-enable it from the Actions tab.
 
@@ -67,3 +79,21 @@ These need your GitHub and Streamlit accounts, so they are listed here rather th
 5. **Links elsewhere:** your GitHub profile README, pinned repositories, resume (PDF and any online version),
    LinkedIn (Featured, Projects and the About section), and anything already sent out with the old
    `var-analysis-tool-….streamlit.app` link.
+
+## Manual steps after the October 2026 work (Phases F–H)
+
+These need your GitHub or Streamlit account, so they are listed here rather than done by a script.
+
+1. **Merge `next-steps-v5` into `main` and push.** Until then `main` keeps publishing the old pickle snapshot, and
+   the live app keeps reading it.
+2. **After the merge:**
+   - **Publish the first zip:** GitHub → **Actions** → **refresh snapshot** → **Run workflow**, with *force*
+     ticked. It publishes the first zip and commits `data/snapshot/published.json` to `main`.
+   - **Check the live app:** open https://risk-analysis-tool.streamlit.app/ and confirm the sidebar shows the new
+     date and the Market page shows the Early warning box. Reboot it once from the app's ⋮ menu if it doesn't.
+3. **Delete the merged branches,** locally and on GitHub: `review-fixes-v4` and `full-risk-tool` now, and
+   `next-steps-v5` after the merge.
+4. **Old repositories:** archive the old VaR-Tool repository (GitHub → Settings → Archive), and decide whether to
+   keep Trading-System or Trading_Tool.
+5. **Profile README:** update the test count on your GitHub profile (it still says 588).
+

@@ -1,6 +1,6 @@
 """
 Build the demo snapshot (ui/snapshot.py): run the app on every preset with the default settings, visit every page,
-and record the downloads and every heavy cached result in data/snapshot/snapshot.pkl.gz.
+and record the downloads and every heavy cached result in data/snapshot/snapshot.zip (JSON + Parquet, ui/snapshot_format.py).
 
     python scripts/build_snapshot.py
 

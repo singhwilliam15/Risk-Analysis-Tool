@@ -3,6 +3,7 @@ name: tests
 on:
   push:
     branches-ignore: [snapshot-data]  # data only (refresh-snapshot.yml)
+    paths-ignore: [data/snapshot/published.json]  # the daily snapshot hash on main
   pull_request:
 
 jobs:

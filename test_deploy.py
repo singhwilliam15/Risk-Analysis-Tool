@@ -14,7 +14,7 @@ import sys
 import pytest
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SNAPSHOT = os.path.join(ROOT, "data", "snapshot", "snapshot.pkl.gz")
+SNAPSHOT = os.path.join(ROOT, "data", "snapshot", "snapshot.zip")
 CLOUD_MIN_MEMORY_MB = 690
 
 

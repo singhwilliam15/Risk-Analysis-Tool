@@ -1,7 +1,8 @@
 name: refresh snapshot
 
-# Rebuild the demo snapshot after each NSE session and publish it on the snapshot-data branch; the running app
-# picks it up within 15 minutes (ui/snapshot.py). On a market holiday the prices do not move and nothing is published.
+# Rebuild the demo snapshot after each NSE session, publish the zip on the snapshot-data branch, and commit its sha256
+# to data/snapshot/published.json on main. The running app checks main's hash every 15 minutes and accepts only a zip
+# that matches it (ui/snapshot.py). On a market holiday the prices do not move and nothing is published.
 on:
   schedule:
     - cron: "30 12 * * 1-5"  # 18:00 IST, Monday to Friday: NSE closes at 15:30 IST; US presets show their last close
@@ -51,7 +52,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git init -q -b snapshot-data
-          git add snapshot.pkl.gz meta.json README.md
+          git add snapshot.zip published.json README.md
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Demo snapshot: prices to ${{ steps.stage.outputs.prices_as_of }}"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" snapshot-data
+      - name: Commit its hash to main (the app trusts only the hash on main)
+        if: steps.stage.outputs.publish == 'true'
+        run: |
+          git checkout -- .                      # drop the rebuilt bundled zip; only the hash goes to main
+          cp publish/published.json data/snapshot/published.json
+          git add data/snapshot/published.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Demo snapshot hash: prices to ${{ steps.stage.outputs.prices_as_of }} [skip ci]"
+          for attempt in 1 2 3; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            sleep 10
+          done
+          exit 1
