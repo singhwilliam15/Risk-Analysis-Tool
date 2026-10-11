@@ -36,7 +36,7 @@ def render(ctx, tab1):
     var_selected = ctx.var_selected
 
     with tab1:
-        st.markdown("### 🏛️ VaR and Expected Shortfall by Model")
+        st.markdown("### Bad-day loss and average worst-day loss by model (VaR and Expected Shortfall)")
         st.caption(f"Position: **{curr_sym}{investment_amount:,.2f}** | Holding Period: **{holding_period} Day(s)** | ES shown at **{cl_label}**")
 
         summary_rows = []
@@ -93,7 +93,7 @@ def render(ctx, tab1):
         col_chart1, col_chart2 = st.columns(2)
 
         with col_chart1:
-            st.markdown("#### 📊 VaR by Model and Confidence Level")
+            st.markdown("#### VaR by Model and Confidence Level")
             df_comp = pd.DataFrame([
                 {"Model": m, "Confidence": pct_label(cl), "VaR_Amount": var_by_level[cl][m]["var_scaled_amount"]}
                 for m in method_names for cl in confidence_levels
@@ -105,7 +105,7 @@ def render(ctx, tab1):
             st.plotly_chart(fig_comp, width="stretch")
 
         with col_chart2:
-            st.markdown("#### 📉 Return Distribution vs Normal and Student-t")
+            st.markdown("#### Return Distribution vs Normal and Student-t")
             mu, sigma = returns.mean(), returns.std(ddof=1)
             t_fit = var_selected["Student-t"]
             nu, t_loc, t_scale = t_fit["degrees_of_freedom"], t_fit["loc"], t_fit["scale"]

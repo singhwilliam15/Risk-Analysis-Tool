@@ -16,7 +16,7 @@ def render(ctx, tab2):
     symbol = ctx.symbol
 
     with tab2:
-        st.markdown("### 📈 Price & Volatility Analytics")
+        st.markdown("### Price & Volatility Analytics")
 
         col_p1, col_p2 = st.columns(2)
 
@@ -33,7 +33,7 @@ def render(ctx, tab2):
             fig_returns.add_hline(y=0, line_dash="dash", line_color="#A0AEC0")
             st.plotly_chart(fig_returns, width="stretch")
 
-        st.markdown("#### 🌊 Annualized Volatility: 30-Day Rolling vs EWMA")
+        st.markdown("#### Annualized Volatility: 30-Day Rolling vs EWMA")
         ewma_sigma, _ = ewma_volatility(returns)
         fig_vol = px.area(df, x="Date", y="Rolling_30d_Vol", title="Volatility clustering: calm and stressed periods",
                           labels={"Rolling_30d_Vol": "Annualized Volatility"}, template="plotly_dark", color_discrete_sequence=["#ED8936"])

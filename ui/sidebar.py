@@ -9,7 +9,7 @@ from integration import JTD_DD, PERMANENT_SHARE
 from liquidity import AMFI_EXCLUDE, AMFI_PARTICIPATION, BANGIA_K, DEFAULT_PARTICIPATION, IMPACT_Y
 from ui.credit_layer import EQUITY_VOL_CHOICES
 from portfolio import BUY_AND_HOLD, ENTRY_MODES, ENTRY_SHARES, ENTRY_VALUE, ENTRY_WEIGHT, REBALANCE_DAILY
-from ui import snapshot
+from ui import plain, snapshot
 from ui.context import export
 from ui.formatting import pct_label
 
@@ -24,6 +24,7 @@ HOLDINGS_KEYS = {ENTRY_WEIGHT: "holdings", ENTRY_SHARES: "holdings_shares", ENTR
 
 def render_sidebar(ctx):
     """Sidebar inputs: mode, ticker or holdings, lookback, position size, confidence, horizon."""
+    plain.view_switch()
     st.sidebar.header("⚙️ Risk Parameters & Input")
     snapshot_meta = snapshot.meta()
     if snapshot_meta:

@@ -25,6 +25,7 @@ def main() -> int:
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--ticker", default=None)
     args = parser.parse_args()
+    os.environ["RISK_TOOL_DEFAULT_VIEW"] = "full"  # measure the worst case: every section of every page rendered
     if args.live:
         os.environ["RISK_TOOL_NO_SNAPSHOT"] = "1"
     else:

@@ -23,6 +23,24 @@ def _csv(frame: pd.DataFrame) -> bytes:
     return frame.to_csv(index=False).encode("utf-8")
 
 
+HOW_TO_READ_KEY = "how_to_read_dismissed"
+
+
+def how_to_read():
+    """A short note for first-time readers, dismissible for the session."""
+    if st.session_state.get(HOW_TO_READ_KEY):
+        return
+    with st.container(border=True):
+        st.markdown("**How to read this tool.** Each page answers one question and opens with a status: **Clear** "
+                    "(within your limit), **Watch** (close to it) or **Warning** (above it). Below that: the key facts, "
+                    "what to do, and the method behind each number. Terms are in plain words with the technical name in "
+                    "brackets; the Glossary page defines them all. Switch to **Full analysis** in the sidebar to see "
+                    "every table and chart.")
+        if st.button("Got it", key="how_to_read_ok"):
+            st.session_state[HOW_TO_READ_KEY] = True
+            st.rerun()
+
+
 def render(ctx):
     _cro_dashboard(ctx)
     render_overview(ctx)
@@ -33,7 +51,7 @@ def render(ctx):
 
 
 def _cro_dashboard(ctx):
-    st.markdown("### 🧭 CRO dashboard")
+    st.markdown("### CRO dashboard")
     content = ctx.memo_content
     st.markdown(f"**Bottom line.** {memo.bottom_line(content)}")
     rows = [{**r, "Status": LIGHTS.get(r["Status"], r["Status"])} for r in ctx.dashboard]
@@ -56,7 +74,7 @@ def _cro_dashboard(ctx):
 
 
 def _positions(ctx):
-    st.markdown("### 💼 Positions")
+    st.markdown("### Positions")
     table = ctx.positions.rename(columns={"Price": f"Price ({ctx.currency})", "Value": f"Value ({ctx.currency})"})
     st.dataframe(table.style.format({"Quantity": "{:,.2f}", f"Price ({ctx.currency})": "{:,.2f}",
                                      f"Value ({ctx.currency})": "{:,.0f}", "Weight": "{:.1%}"}),
@@ -67,7 +85,7 @@ def _positions(ctx):
 
 
 def _data_quality(ctx):
-    st.markdown("### 🧪 Data quality")
+    st.markdown("### Data quality")
     rows = [{"Ticker": t, "Score": q["score"], "Volume From": " + ".join(ctx.volume_sources.get(t, [t])),
              "Issues": "; ".join(q["reasons"]) or "no issues found"}
             for t, q in ctx.quality.items()]
@@ -84,7 +102,7 @@ def _data_quality(ctx):
 
 
 def _fundamentals(ctx):
-    st.markdown("### 📑 Fundamentals and sources")
+    st.markdown("### Fundamentals and sources")
     tickers = list(ctx.fundamentals_by_ticker)
     ticker = st.selectbox("Holding", tickers, key="fundamentals_ticker") if len(tickers) > 1 else tickers[0]
     fund = ctx.fundamentals_by_ticker[ticker]
@@ -135,7 +153,7 @@ def _fundamentals(ctx):
 
 
 def _disclosures(ctx):
-    st.markdown("### 🗂️ Disclosure data (India)")
+    st.markdown("### Disclosure data (India)")
     disclosures = ctx.disclosures
     if disclosures["files"].empty:
         st.info("No disclosure files are loaded yet. Pledges, surveillance lists, price bands, the F&O ban list, rating "

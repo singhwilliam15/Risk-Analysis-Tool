@@ -35,7 +35,7 @@ def render(ctx):
         return f"{curr}{v:,.0f}" if v is not None and np.isfinite(v) else "not available"
 
     m = ctx.liquidity_metrics
-    st.subheader(f"💧 Liquidity: {ctx.company_name}")
+    st.subheader(f"Liquidity: {ctx.company_name}")
     st.caption(f"Participation rate {ctx.participation:.0%} of daily volume (assumption) · volume: "
                + "; ".join(" + ".join(v) for v in ctx.volume_sources.values()))
     st.caption("90% ranges: days to liquidate and the share sellable are recomputed with each day's average volume over "
@@ -60,7 +60,7 @@ def render(ctx):
     _amihud(ctx)
     _validation(ctx)
 
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown("""
 - **Block and bulk deals.** A large holder can often sell a block off-market at a negotiated discount, faster than the daily-volume figures suggest; the discount itself is not modelled.
 - **Free float.** Volume measures trading, not how many shares are actually available; a stock with a small free float can freeze faster than its volume suggests.
@@ -73,7 +73,7 @@ def render(ctx):
 
 
 def _capacity(ctx, money):
-    st.markdown("### 🚚 Trading capacity")
+    st.markdown("### How fast it can be sold (trading capacity)")
     h = ctx.liquidity_holdings
     table = pd.DataFrame({
         "Ticker": h["Ticker"], "Value": h["Value"].map(money), "ADV 60d (shares)": h["ADV 60d"].map("{:,.0f}".format),
@@ -89,7 +89,7 @@ def _capacity(ctx, money):
 
 
 def _amfi(ctx):
-    st.markdown("### 🏛️ SEBI/AMFI-style liquidity stress test")
+    st.markdown("### Fund-style selling test (SEBI/AMFI liquidity stress test)")
     rows = []
     for fraction in L.AMFI_FRACTIONS:
         with_ex, without = ctx.liquidity_amfi[(fraction, True)], ctx.liquidity_amfi[(fraction, False)]
@@ -110,7 +110,7 @@ def _amfi(ctx):
 
 
 def _stressed(ctx):
-    st.markdown("### 🌪️ Volume in past crises")
+    st.markdown("### Trading volume in past crises")
     parts = []
     for t, res in ctx.liquidity_stressed.items():
         table = res["table"].assign(Ticker=t)
@@ -133,7 +133,7 @@ def _stressed(ctx):
 
 
 def _costs(ctx, money):
-    st.markdown("### 💸 Spread, impact and liquidity-adjusted VaR")
+    st.markdown("### Bad-day loss including the cost of selling (spread, impact and liquidity-adjusted VaR)")
     w = ctx.liquidity_waterfall
     fig = go.Figure(go.Waterfall(x=w["Step"], y=w["Amount"], measure=["absolute", "relative", "relative", "relative"],
                                  text=[money(v) for v in w["Amount"]], textposition="outside",
@@ -156,7 +156,7 @@ def _costs(ctx, money):
 
 
 def _circuit(ctx, money):
-    st.markdown("### 🔒 Circuit-lock risk")
+    st.markdown("### Locked at the daily limit (circuit-lock risk)")
     h = ctx.liquidity_holdings
     st.dataframe(pd.DataFrame({
         "Ticker": h["Ticker"], "Band": h["Band"].map(lambda v: f"{v:.0%}" if np.isfinite(v) else "no fixed band"),
@@ -170,7 +170,7 @@ def _circuit(ctx, money):
 
 
 def _amihud(ctx):
-    st.markdown("### 📉 Amihud illiquidity")
+    st.markdown("### Price move per rupee traded (Amihud illiquidity)")
     fig = go.Figure()
     for i, (t, series) in enumerate(ctx.liquidity_amihud.items()):
         series = series.dropna()

@@ -445,12 +445,20 @@ def memo_content():
                        "interaction_pct": 0.0011, "market_value": 250000, "liquidity_value": 5000, "credit_value": 100,
                        "events_value": 0, "plain_value": 250000},
             "reverse": "Most plausible way to lose 15% in a month: Nifty 50 −12%.", "limits": rows,
-            "risks": ["Limit breached: ES"], "actions": ["Sell 5% of A into cash"], "sources": ["Yahoo Finance"]}
+            "risks": ["Limit breached: ES"], "actions": ["Sell 5% of A into cash"], "sources": ["Yahoo Finance"],
+            "plain": [{"pillar": "Market", "status": "Warning", "verdict": "on a bad day you could lose about ₹12,000 (1.2% of ₹1,000,000)."},
+                      {"pillar": "Liquidity", "status": "Clear", "verdict": "half of it could be sold in 0.1 days."},
+                      {"pillar": "Credit", "status": "Clear", "verdict": "credit risk is within your limit."},
+                      {"pillar": "Pledges and governance", "status": "Clear", "verdict": "no holding has a pledge or governance warning."},
+                      {"pillar": "Everything at once", "status": "Warning", "verdict": "in the worst scenario (GFC) you would lose about ₹255,100 (25.5%)."}]}
 
 
 def test_memo_markdown_has_every_section():
     md = memo.markdown(memo_content())
-    for section in ("## Bottom line", "## Pillar summary", "## Integrated stress", "## What the numbers miss", "## Limits",
+    md_lines = md.splitlines()
+    assert md_lines.index("## In plain words") < md_lines.index("## Bottom line")  # the plain paragraph comes first
+    assert "Market: Warning, on a bad day" in memo.plain_words(memo_content())
+    for section in ("## In plain words", "## Bottom line", "## Pillar summary", "## Integrated stress", "## What the numbers miss", "## Limits",
                     "## Actions", "## Data sources and caveats"):
         assert section in md, section
     assert "1 limit(s) breached" in memo.bottom_line(memo_content()) and "no language model" in md

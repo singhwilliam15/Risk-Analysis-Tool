@@ -42,7 +42,7 @@ def render(ctx):
         return f"under {curr}1" if 0 <= v < 0.5 else f"{curr}{v:,.0f}"
 
     m, view = ctx.credit_metrics, ctx.credit_view
-    st.subheader(f"🏦 Credit: {ctx.company_name}")
+    st.subheader(f"Credit: {ctx.company_name}")
     st.caption(f"As of {ctx.prices_as_of:%d %b %Y}, using only statements public by then. Merton equity volatility: "
                f"**{ctx.equity_vol_choice}** (change it under Credit assumptions). The page leads with the **distance to "
                "default** and where it sits among a reference universe, and with the **agencies' published default "
@@ -112,7 +112,7 @@ def _headline(ctx, m, view, money):
 
 
 def _misses():
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown("""
 - **Off-balance-sheet debt**: guarantees, leases not on the balance sheet, supplier finance and contingent liabilities.
 - **Group-company exposure**: debt of subsidiaries or sister companies that the listed company may have to support.
@@ -125,7 +125,7 @@ def _misses():
 
 
 def _portfolio_table(ctx, money):
-    st.markdown("### 📋 By holding")
+    st.markdown("### By holding")
     t = ctx.credit_view["table"]
     st.dataframe(pd.DataFrame({
         "Ticker": t["Ticker"], "Value": t["Value"].map(money),
@@ -146,7 +146,7 @@ def _debt_book(ctx, money):
     book = ctx.debt_book
     if book is None or book.empty:
         return
-    st.markdown("### 🧾 Debt holdings")
+    st.markdown("### Debt holdings")
     cfg = D.load_config()
     shown = pd.DataFrame({
         "Name": book["Name"], "Issuer": book["Issuer Ticker"].replace("", "-"), "Rating": book["Rating"],

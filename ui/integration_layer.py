@@ -289,4 +289,12 @@ def memo_content(ctx) -> dict:
                    "and listed in docs/methodology.md.")
     return {"name": ctx.company_name, "as_of": ctx.prices_as_of, "confidence": f"{ctx.cl_label}, {ctx.holding_period}-day",
             "value": money(ctx.investment_amount), "currency": ctx.currency, "pillars": ctx.dashboard, "stress": stress,
-            "reverse": reverse, "limits": limits, "risks": ctx.top_risks, "actions": ctx.top_actions, "sources": sources}
+            "reverse": reverse, "limits": limits, "risks": ctx.top_risks, "actions": ctx.top_actions, "sources": sources,
+            "plain": plain_summary(ctx)}
+
+
+def plain_summary(ctx) -> list:
+    """Each pillar's status word and verdict from the page summaries, for the memo's 'In plain words' paragraph."""
+    from ui import summaries
+    return [{"pillar": name, "status": parts["status"], "verdict": parts["verdict"]}
+            for page, name in summaries.OVERVIEW_PILLARS for parts in [summaries.build(page, ctx)]]

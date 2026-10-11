@@ -885,6 +885,19 @@ The Market page's "Signals with a tested record" panel lists every signal in thi
 for each NSE holding. Lifts come from different windows: price rules 2020–24, pledge rules Oct 2022 – Dec 2024, and
 the v1 liquidity and stress flags 2016–24 without a range. They are best compared within a window.
 
+### 15.6 Plain-language presentation (`ui/plain.py`, `ui/summaries.py`, October 2026)
+
+Presentation only: no number, rule or threshold changes. Each page opens with a status word from rules that already
+exist:
+- **pillar pages:** the pillar's limit light (green → Clear, amber → Watch, red → Warning);
+- **Trust:** the headline ES grade (A/B → Clear, C → Watch, D → Warning);
+- **Promoter Pledge & Governance:** the worst event tier (Low → Clear, Elevated → Watch, High → Warning);
+- **Overview, Integrated Stress and Decisions:** the worst limit light.
+
+The status word is always written out next to its colour. Every plain term is followed by its technical name in
+brackets; the vocabulary, with one-line definitions and the section of this document, is in `ui/plain.py` and on the
+Glossary page.
+
 ## 16. Demo snapshot (`ui/snapshot.py`, `scripts/build_snapshot.py`)
 
 - **Built by running the app.** The build runs every preset (5 NSE stocks, 3 US stocks and the default portfolio) on every page with the default settings. It records each download and each heavy cached result in `data/snapshot/snapshot.zip`, keyed by a SHA-256 of its arguments:

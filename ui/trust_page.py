@@ -23,7 +23,7 @@ def render(ctx):
 
     trusted, risk = ctx.trusted, ctx.trust["model_risk"]
     headline = ctx.headline_model
-    st.subheader(f"🛡️ Trust: {ctx.company_name}")
+    st.subheader(f"Trust: {ctx.company_name}")
     status_note = {"recommended": " (recommended: passes the VaR tests and the ES test)",
                    "var_only": " (not recommended: the best model on the VaR tests, but every such model fails the ES "
                                "test, which the grade counts as a failed backtest)",
@@ -49,7 +49,7 @@ def render(ctx):
     _ghost(ctx, money)
     _grade_rules()
 
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown(f"""
 - **Only estimation error.** The {CI_LEVEL:.0%} ranges show how much the number could move with a different sample from the same process. They do not cover a change of regime, a crisis unlike anything in the window, or a model that is wrong in kind; the model-dispersion and lookback panels give a feel for those.
 - **The block length is itself an estimate** (Politis-White: {ctx.trust_ranges['block_length']:.1f} days, {ctx.trust_ranges['block_method']}). A longer block would widen the ranges when volatility clusters strongly.
@@ -61,7 +61,7 @@ def render(ctx):
 
 
 def _model_table(ctx, money):
-    st.markdown("### 📏 Every model: value, 90% range and grade")
+    st.markdown("### How reliable each model is: value, 90% range and trust grade")
     grades = ctx.trust["grades"].set_index("Model")
     rows = []
     for row in ctx.ranges_table.to_dict("records"):
@@ -76,7 +76,7 @@ def _model_table(ctx, money):
 
 
 def _lookback(ctx, money):
-    st.markdown("### 🔭 Lookback sensitivity: ES on different windows")
+    st.markdown("### Does the answer depend on the data window? (lookback sensitivity: ES on different windows)")
     table = ctx.lookback
     available = table[table["Available"]]
     models = [c for c in available.columns if c not in LOOKBACK_INFO]
@@ -99,7 +99,7 @@ def _lookback(ctx, money):
 
 
 def _ghost(ctx, money):
-    st.markdown("### 👻 Ghost effect in Historical VaR")
+    st.markdown("### Jump when an old crash leaves the data (ghost effect in Historical VaR)")
     ghost = ctx.ghost
     st.markdown(f"Historical VaR uses the last **{ghost['window_days']}** returns. "
                 f"**{len(ghost['leaving'])}** tail loss(es) among the oldest {ghost['horizon']} days leave the window within "

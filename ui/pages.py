@@ -20,10 +20,11 @@ EVENTS = "Promoter Pledge & Governance"
 INTEGRATED = "Integrated Stress"
 DECISIONS = "Decisions"
 TRUST = "Trust"
-PAGES = (OVERVIEW, MARKET, LIQUIDITY, CREDIT, CONCENTRATION, EVENTS, INTEGRATED, DECISIONS, TRUST)
+GLOSSARY = "Glossary"
+PAGES = (OVERVIEW, MARKET, LIQUIDITY, CREDIT, CONCENTRATION, EVENTS, INTEGRATED, DECISIONS, TRUST, GLOSSARY)
 PAGE_KEY = "page"
 # Shareable links: ?page=market opens the Market page (slugs: overview, market, liquidity, credit,
-# concentration-factors, promoter-pledge-governance, integrated-stress, decisions, trust; old links
+# concentration-factors, promoter-pledge-governance, integrated-stress, decisions, trust, glossary; old links
 # ?page=event-governance and ?page=events still open the pledge page)
 SLUGS = {p: re.sub(r"[^a-z]+", "-", p.lower()).strip("-") for p in PAGES}
 ALIASES = {"event-governance": SLUGS[EVENTS], "events": SLUGS[EVENTS], "pledges": SLUGS[EVENTS]}  # renamed in v6 Phase 3

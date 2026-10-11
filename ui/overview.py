@@ -28,7 +28,7 @@ def render_overview(ctx):
     var_hist = ctx.var_hist
     var_selected = ctx.var_selected
 
-    st.subheader(f"📈 Risk Overview for {company_name} ({symbol})")
+    st.subheader(f"Risk Overview for {company_name} ({symbol})")
     flagged_moves = [f"{t} {row.Date:%d %b %Y}: {row.Returns:+.0%}, next day {row.Next_Day_Return:+.0%}"
                      + (" (reversed: likely data error)" if row.Reversed else "")
                      for t, table in suspicious.items() for row in table.itertuples()]

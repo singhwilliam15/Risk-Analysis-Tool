@@ -21,6 +21,8 @@ from data_fetcher import SOURCE_YFINANCE, _add_return_columns
 os.environ["RISK_TOOL_NO_SNAPSHOT"] = "1"
 # ... and never look for the daily published one (tests that switch the snapshot on see only the local file)
 os.environ["RISK_TOOL_SNAPSHOT_URL"] = ""
+# ... and open in the Full analysis view, so every section renders (test_app.py checks the Summary view itself)
+os.environ["RISK_TOOL_DEFAULT_VIEW"] = "full"
 
 PERIOD_DAYS = {"1y": 250, "2y": 500, "5y": 1250, "max": 2600}
 LAST_DATE = "2026-09-30"

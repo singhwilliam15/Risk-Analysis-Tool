@@ -35,7 +35,7 @@ def render(ctx, tab5):
     worst_df = ctx.worst_df
 
     with tab5:
-        st.markdown("### 📥 Download Excel Risk Report")
+        st.markdown("### Download Excel Risk Report")
         st.write("A formatted `.xlsx` workbook with every model's VaR and ES, the out-of-sample backtest, β-adjusted stress tests, worst historical losses, the positions with each holding's data-quality score, and the raw price data.")
 
         excel_bytes = generate_excel_var_report(
@@ -86,7 +86,7 @@ def render(ctx, tab5):
         )
 
         st.markdown("---")
-        st.markdown("#### 📄 Raw Market Data Export (CSV)")
+        st.markdown("#### Raw Market Data Export (CSV)")
         csv_bytes = df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label=f"📄 Download Raw Prices & Returns ({symbol}_data.csv)",

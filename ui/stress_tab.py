@@ -28,7 +28,7 @@ def render(ctx, tab3):
     worst_df = ctx.worst_df
 
     with tab3:
-        st.markdown("### ⚡ Stress Testing")
+        st.markdown("### Stress Testing")
         position_word = "portfolio" if is_portfolio else "stock"
         sb1, sb2, sb3 = st.columns(3)
         sb1.metric(f"Beta vs {benchmark_name}", f"{beta:.2f}" if np.isfinite(beta) else "n/a",
@@ -39,7 +39,7 @@ def render(ctx, tab3):
         if not np.isfinite(beta):
             st.warning(f"Could not download {benchmark_name} data to estimate beta, so β = 1 is assumed.")
 
-        st.markdown("#### 🏛️ Historical crises")
+        st.markdown("#### Historical crises")
         if stress_table is None:
             st.warning(f"Could not download {benchmark_name} history, so the crisis scenarios cannot be measured.")
         else:
@@ -76,7 +76,7 @@ def render(ctx, tab3):
                 fig_stress.update_layout(yaxis_tickformat=".0%", xaxis_tickangle=-30)
                 st.plotly_chart(fig_stress, width="stretch")
 
-        st.markdown("#### 🎚️ Custom market move")
+        st.markdown("#### Custom market move")
         custom_shock_pct = st.slider(f"{benchmark_name} move (%)", min_value=-60.0, max_value=40.0, value=-20.0, step=1.0)
         move_beta = proxy_beta if custom_shock_pct < 0 else beta_used
         custom_move = max(custom_shock_pct / 100.0 * move_beta, -1.0)
@@ -86,14 +86,14 @@ def render(ctx, tab3):
                    f"({'downside' if custom_shock_pct < 0 else 'normal'} β = {move_beta:.2f}): P&L of **{'-' if custom_pnl < 0 else '+'}{curr_sym}{abs(custom_pnl):,.0f}**, "
                    f"leaving **{curr_sym}{investment_amount + custom_pnl:,.0f}**. Falls use the downside beta, rises the normal beta.")
 
-        st.markdown(f"#### 🌪️ Volatility shock ({cl_label}, {holding_period}-day)")
+        st.markdown(f"#### Volatility shock ({cl_label}, {holding_period}-day)")
         st.caption("VaR and ES re-run with every return's distance from the mean multiplied by k: r′ = μ + k·(r − μ).")
         vs_display = vol_shock_table.copy()
         for col in ("Historical VaR", "Historical ES", "Normal VaR", "Normal ES"):
             vs_display[col] = vs_display[col].map(lambda x: f"{curr_sym}{x:,.0f}")
         st.dataframe(vs_display, width="stretch", hide_index=True)
 
-        st.markdown("#### 📉 Worst Actual Losses in the Sample")
+        st.markdown("#### Worst Actual Losses in the Sample")
         st.caption(f"The {position_word}'s own worst compounded return over each horizon. Compare these with VaR: a VaR well below them understates real tail risk.")
         worst_display = worst_df.copy()
         worst_display["Worst Return"] = worst_display["Worst Return"].map(lambda x: f"{x:.2%}")

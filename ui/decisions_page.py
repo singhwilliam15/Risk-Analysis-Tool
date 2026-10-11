@@ -27,13 +27,13 @@ def render(ctx):
     def money(v):
         return f"{curr}{v:,.0f}" if v is not None and np.isfinite(v) else "not available"
 
-    st.subheader(f"🧭 Decisions: {ctx.company_name}")
+    st.subheader(f"Decisions: {ctx.company_name}")
     _limits(ctx)
     _change(ctx, money)
     _trades(ctx, money)
     _memo(ctx)
 
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown("""
 - **Trades are measured on history**: the ES after a trade uses the same past returns; it ignores costs, taxes and market impact of the trade itself.
 - **The hedge is measurement only**: no basis risk, margin, roll cost or lot sizes.
@@ -44,7 +44,7 @@ def render(ctx):
 
 
 def _limits(ctx):
-    st.markdown("### 🚦 Limits")
+    st.markdown("### Risk limits (limit utilisation)")
     t = ctx.limits_table
     shown = pd.DataFrame({
         "Limit": t["Limit"], "Status": t["Status"].map(lambda s: f"{LIGHTS.get(s, '⚪')} {s}"),
@@ -70,7 +70,7 @@ def _limits(ctx):
 
 
 def _change(ctx, money):
-    st.markdown("### 🔄 What changed in the risk")
+    st.markdown("### What changed in the risk (Shapley attribution)")
     c1, c2 = st.columns([1, 2])
     c1.selectbox("Compare today with", CHANGE_MONTHS, index=2, key=CHANGE_MONTHS_KEY, format_func=lambda m: f"{m} month(s) ago")
     upload = c2.file_uploader("…or a saved snapshot (JSON)", type="json", key="snapshot_upload")
@@ -101,7 +101,7 @@ def _change(ctx, money):
 
 
 def _trades(ctx, money):
-    st.markdown("### 🛠️ Best risk-reducing trades")
+    st.markdown("### Best risk-reducing trades (ranked by the cut in Expected Shortfall)")
     comp = ctx.es_components
     total = comp.sum()
     weights = ctx.positions.set_index("Ticker")["Weight"]
@@ -130,7 +130,7 @@ def _trades(ctx, money):
 
 
 def _memo(ctx):
-    st.markdown("### 📝 One-page CRO memo")
+    st.markdown("### One-page CRO memo")
     content = ctx.memo_content
     md = memo.markdown(content)
     c1, c2 = st.columns(2)

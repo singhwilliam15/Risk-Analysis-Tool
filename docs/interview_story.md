@@ -14,7 +14,7 @@ down further. I wanted a tool that models that spiral, and that says how far eac
 
 **2. What I built (40 seconds)**
 
-It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 640 offline tests.
+It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 645 offline tests.
 
 - **Five pillars** (market, liquidity, credit, concentration, and event risk), plus a check of banks against RBI's
   Prompt Corrective Action triggers.

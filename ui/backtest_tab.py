@@ -24,7 +24,7 @@ def render(ctx, tab4):
     test_days = ctx.test_days
 
     with tab4:
-        st.markdown(f"### 🔬 Out-of-Sample Backtest of Every Model ({cl_label} VaR)")
+        st.markdown(f"### Checked against what happened (out-of-sample backtest of every model, {cl_label} VaR)")
         st.caption(f"Each day's VaR is estimated from the previous {backtest_window} trading days only, then compared with that day's actual return. "
                    "**Kupiec** tests whether the breach count is right; **Christoffersen independence** tests whether breaches cluster together; "
                    "**conditional coverage** combines both. A model passes if every p-value is at least 0.05. "

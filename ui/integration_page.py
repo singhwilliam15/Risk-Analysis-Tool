@@ -22,7 +22,7 @@ def render(ctx):
     def money(v):
         return f"{curr}{v:,.0f}" if v is not None and np.isfinite(v) else "not available"
 
-    st.subheader(f"🔗 Integrated stress: {ctx.company_name}")
+    st.subheader(f"Integrated stress: {ctx.company_name}")
     linked = ctx.linked
     if linked.empty:
         st.info("No crisis window could be measured (no long benchmark history), so the linked engine has no scenario.")
@@ -89,7 +89,7 @@ def render(ctx):
 
     _reverse(ctx, money)
 
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown("""
 - **Contagion between holdings and other investors**: the feedback runs within each stock. Fund redemptions, rating downgrades and other holders' selling over weeks are not modelled.
 - **Credit as a loss**: for equity holders it is a signal and a jump-to-default scenario; bonds and loans (with a credit loss) come later.
@@ -121,7 +121,7 @@ def _jump_to_default(linked, money):
 
 
 def _reverse(ctx, money):
-    st.markdown("### ↩️ Reverse stress test")
+    st.markdown("### What move would cost you this much (reverse stress test)")
     st.radio("Loss over one month", REVERSE_LOSSES, index=1, key=REVERSE_LOSS_KEY, horizontal=True, format_func=lambda v: f"{v:.0%}")
     rv = ctx.reverse
     full = rv["full"]

@@ -16,7 +16,7 @@ def run_app(mode=None, page="Market", **sidebar):
         at.radio(key="page").set_value(page)
         at.run()
     if mode:
-        at.sidebar.radio[0].set_value(mode)
+        sidebar_radio(at, "Analysis Mode").set_value(mode)
         at.run()
     selects = {w.label: w for w in at.sidebar.selectbox}
     for label, value in sidebar.items():
@@ -24,6 +24,11 @@ def run_app(mode=None, page="Market", **sidebar):
     if sidebar:
         at.run()
     return at
+
+
+def sidebar_radio(at, label):
+    """A sidebar radio by its label (the View switch comes first)."""
+    return next(r for r in at.sidebar.radio if r.label == label)
 
 
 def assert_clean(at):
@@ -81,7 +86,7 @@ def test_portfolio_mode_with_what_if(fake_market):
 
 def test_portfolio_buy_and_hold(fake_market):
     at = run_app("Portfolio")
-    at.sidebar.radio[1].set_value("Buy-and-hold (weights drift)")
+    sidebar_radio(at, "Rebalancing").set_value("Buy-and-hold (weights drift)")
     at.run()
     assert_clean(at)
 
@@ -99,7 +104,7 @@ def test_short_history_flags_low_power(fake_market):
 def test_portfolio_input_errors_are_reported(fake_market, edits, expected):
     at = AppTest.from_file("app.py", default_timeout=TIMEOUT)
     at.run()
-    at.sidebar.radio[0].set_value("Portfolio")
+    sidebar_radio(at, "Analysis Mode").set_value("Portfolio")
     at.session_state["holdings"] = {"edited_rows": edits, "added_rows": [], "deleted_rows": []}
     at.run()
     assert not at.exception
@@ -142,7 +147,7 @@ def test_integrated_stress_page(fake_market, mode):
     assert "Siloed Sum" not in table.columns
     assert any(m.value == "#### Jump to default" for m in at.markdown)
     assert "Market -20%" in table["Scenario"].tolist()
-    assert any("Reverse stress test" in m.value for m in at.markdown)
+    assert any("(reverse stress test)" in m.value for m in at.markdown)
     at.radio(key="reverse_loss").set_value(0.30)
     at.run()
     assert_clean(at)
@@ -170,7 +175,7 @@ def test_trust_page(fake_market, mode):
     at = run_app(mode if mode == "Portfolio" else None, page="Trust")
     assert_clean(at)
     headings = [m.value for m in at.markdown]
-    for section in ("Every model", "Lookback sensitivity", "Ghost effect", "What this metric misses"):
+    for section in ("How reliable each model is", "lookback sensitivity", "ghost effect", "What this metric misses"):
         assert any(section in h for h in headings), section
     assert at.metric[2].label == "Trust grade" and at.metric[2].value in ("A", "B", "C", "D")
     models = at.dataframe[0].value
@@ -182,8 +187,8 @@ def test_liquidity_page(fake_market, mode):
     at = run_app(mode if mode == "Portfolio" else None, page="Liquidity")
     assert_clean(at)
     headings = [m.value for m in at.markdown]
-    for section in ("Trading capacity", "SEBI/AMFI", "Volume in past crises", "liquidity-adjusted VaR",
-                    "Circuit-lock risk", "Amihud", "What this metric misses"):
+    for section in ("trading capacity", "SEBI/AMFI", "volume in past crises", "liquidity-adjusted VaR",
+                    "circuit-lock risk", "Amihud", "What this metric misses"):
         assert any(section in h for h in headings), section
     assert [m.label for m in at.metric] == ["Days to liquidate 50% (AMFI)", "Sellable in 5 days", "Liquidity-adjusted VaR",
                                             "Circuit-lock loss"]
@@ -221,14 +226,14 @@ def test_concentration_page(fake_market, mode):
     at = run_app(mode if mode == "Portfolio" else None, page="Concentration & Factors")
     assert_clean(at)
     headings = [m.value for m in at.markdown]
-    assert any("Factor exposures (Fama-French 3 + momentum)" in h for h in headings)
+    assert any("(factor exposures, Fama-French 3 + momentum)" in h for h in headings)
     assert any("What this metric misses" in h for h in headings)
     assert any("Factor data:" in c.value and "IIM Ahmedabad" in c.value for c in at.caption)
     labels = [m.label for m in at.metric]
     assert "Factor share of variance" in labels
     if mode == "Portfolio":
         assert "Effective number of bets (Meucci)" in labels and "Diversification kept in a crisis" in labels
-        assert any("Correlation in a crisis" in h for h in headings)
+        assert any("(crisis correlation)" in h for h in headings)
     else:
         assert any("100% concentrated" in i.value for i in at.info)
 
@@ -311,7 +316,7 @@ def test_inputs_are_shared_across_pages(fake_market):
     at.radio(key="page").set_value("Overview")
     at.run()
     assert_clean(at)
-    assert at.sidebar.radio[0].value == "Portfolio"  # the sidebar keeps its state when the page changes
+    assert sidebar_radio(at, "Analysis Mode").value == "Portfolio"  # the sidebar keeps its state when the page changes
     assert "5-stock portfolio" in at.subheader[0].value
 
 
@@ -360,3 +365,78 @@ def test_a_link_opens_the_page_it_names(fake_market):
     at.run()
     assert at.query_params["page"] in ("trust", ["trust"])
 
+
+
+# ---------------------------------------------------------------
+# Plain-language presentation (FINAL_PLAN_V6 Phase 4)
+# ---------------------------------------------------------------
+
+STATUS_WORDS = ("Clear:", "Watch:", "Warning:")
+
+
+def summary_view(at):
+    at.radio(key="view").set_value("Summary")
+    at.run()
+    return at
+
+
+@pytest.mark.parametrize("mode", ["Single Stock", "Portfolio"])
+def test_every_page_opens_with_a_plain_summary(fake_market, mode):
+    """Summary view: each page starts with a status word and a verdict, and keeps the full analysis behind a toggle
+    that reveals it; the Full analysis view shows the same summary and then everything, without the toggle."""
+    from ui.pages import GLOSSARY, PAGES
+    at = summary_view(run_app(mode if mode == "Portfolio" else None, page="Overview"))
+    for page in PAGES:
+        at.radio(key="page").set_value(page)
+        at.run()
+        assert_clean(at)
+        if page == GLOSSARY:
+            continue
+        headings = [m.value for m in at.markdown if m.value.startswith("#### ")]
+        assert headings and any(w in headings[0] for w in STATUS_WORDS), page
+        toggle = at.toggle[0]
+        assert toggle.label == "Show the full analysis" and not toggle.value, page
+        shown = len(at.markdown)
+        toggle.set_value(True)
+        at.run()
+        assert_clean(at)
+        assert len(at.markdown) > shown, page  # the toggle reveals the full page
+    at.radio(key="view").set_value("Full analysis")
+    at.run()
+    assert_clean(at)
+    assert not at.toggle or all(t.label != "Show the full analysis" for t in at.toggle)
+
+
+def test_summary_text_is_short_and_names_the_technical_terms(fake_market):
+    """Every page's summary, from a real run: under the word limit, and each plain term followed by its technical name."""
+    from ui import plain, summaries
+    from ui.pages import PAGES
+    for mode in (None, "Portfolio"):
+        at = run_app(mode, page="Overview")
+        for page in summaries.BUILDERS:
+            at.radio(key="page").set_value(page)
+            at.run()
+            parts = at.session_state[summaries.LAST_KEY]
+            words = plain.words(summaries.text(parts))
+            assert words <= plain.SUMMARY_WORD_LIMIT, (page, words)
+            assert parts["status"] in (plain.CLEAR, plain.WATCH, plain.WARNING)
+            for label, _, _ in parts["facts"]:
+                if any(label.startswith(p) for p, *_ in plain.VOCAB.values()):
+                    assert label.endswith(")") and " (" in label, (page, label)
+
+
+def test_glossary_lists_every_term(fake_market):
+    from ui.plain import VOCAB
+    at = run_app(page="Glossary")
+    assert_clean(at)
+    table = at.table[0].value
+    assert len(table) == len(VOCAB) and table["Technical term"].tolist() == [v[1] for v in VOCAB.values()]
+    assert all(a.startswith("§") for a in table["Methodology"])
+
+
+def test_how_to_read_note_can_be_dismissed(fake_market):
+    at = summary_view(run_app(page="Overview"))
+    assert any(m.value.startswith("**How to read this tool.**") for m in at.markdown)
+    at.button(key="how_to_read_ok").click()
+    at.run()
+    assert not any(m.value.startswith("**How to read this tool.**") for m in at.markdown)

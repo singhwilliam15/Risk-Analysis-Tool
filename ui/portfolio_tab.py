@@ -34,7 +34,7 @@ def render(ctx, tab_portfolio):
     weights_now = getattr(ctx, 'weights_now', None)
 
     with tab_portfolio:
-        st.markdown(f"### 🧩 Where the Portfolio's Risk Comes From ({cl_label}, {holding_period}-day)")
+        st.markdown(f"### Where the Portfolio's Risk Comes From ({cl_label}, {holding_period}-day)")
         sample_note = (f"**{alignment['limiting_ticker']}** has the shortest history and limits the sample to {alignment['common_days']} common "
                        f"trading days ({alignment['days_dropped']} days dropped from the longest history)." if alignment["days_dropped"] > 0 else
                        f"All holdings share the full sample of {alignment['common_days']} trading days.")
@@ -103,7 +103,7 @@ def render(ctx, tab_portfolio):
         - Diversification cuts {basis} by **{curr_sym}{decomposition['diversification_benefit']:,.0f}** compared with adding up each position's risk separately.
         """)
 
-        st.markdown("#### 🔧 What-if: change a weight or add a holding")
+        st.markdown("#### What-if: change a weight or add a holding")
         st.caption("The chosen holding is set to the new weight; the others keep their relative sizes and are scaled to fill the rest.")
         add_label = "➕ Add a new ticker"
         wi1, wi2, wi3 = st.columns(3)

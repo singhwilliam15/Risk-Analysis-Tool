@@ -47,9 +47,15 @@ def bottom_line(content: dict) -> str:
     return lead + "."
 
 
+def plain_words(content: dict) -> str:
+    """The memo's first paragraph: each pillar's status word and verdict, as the app's page summaries state them."""
+    return " ".join(f"{p['pillar']}: {p['status']}, {p['verdict']}" for p in content.get("plain", []))
+
+
 def markdown(content: dict) -> str:
     lines = [f"# CRO memo: {content['name']}", "",
              f"*{content['as_of']:%d %b %Y} · {content['confidence']} · value {content['value']} · Risk Analysis Tool*", "",
+             *(["## In plain words", "", plain_words(content), ""] if content.get("plain") else []),
              "## Bottom line", "", bottom_line(content), "", "## Pillar summary", "",
              "| Pillar | Headline | Range | Grade | Status |", "| --- | --- | --- | --- | --- |"]
     lines += [f"| {r['Pillar']} | {r['Headline']} | {r['Range']} | {r['Grade']} | {r['Status']} |" for r in content["pillars"]]
@@ -118,6 +124,7 @@ def pdf(content: dict) -> bytes:
 
     story = [Paragraph(f"CRO memo: {content['name']}", title),
              Paragraph(f"{content['as_of']:%d %b %Y} · {content['confidence']} · value {content['value']} · Risk Analysis Tool", small),
+             *([Paragraph("In plain words", head), Paragraph(plain_words(content), body)] if content.get("plain") else []),
              Paragraph("Bottom line", head), Paragraph(bottom_line(content), body), Paragraph("Pillar summary", head)]
     rows = [["Pillar", "Headline", "Range", "Grade", "Status"]] + [
         [r["Pillar"], r["Headline"], r["Range"], r["Grade"], r["Status"]] for r in content["pillars"]]

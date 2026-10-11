@@ -8,8 +8,8 @@ This file only wires the UI sections together; each lives in ui/ and the calcula
 The sidebar, data loading and calculations run once per rerun and are shared by every page.
 """
 
-from ui import (concentration_page, credit_page, decisions_page, events_page, integration_page, liquidity_page,
-                market_page, overview_page, trust_page)
+from ui import (concentration_page, credit_page, decisions_page, events_page, glossary_page, integration_page,
+                liquidity_page, market_page, overview_page, plain, summaries, trust_page)
 from ui.analysis import compute
 from ui.concentration_layer import compute_concentration
 from ui.context import new_context
@@ -19,8 +19,8 @@ from ui.events_layer import compute_events
 from ui.foundations import load_foundations
 from ui.integration_layer import compute_decisions, compute_integration
 from ui.liquidity_layer import compute_liquidity
-from ui.pages import (CONCENTRATION, CREDIT, DECISIONS, EVENTS, INTEGRATED, LIQUIDITY, MARKET, OVERVIEW, TRUST,
-                      render_navigation)
+from ui.pages import (CONCENTRATION, CREDIT, DECISIONS, EVENTS, GLOSSARY, INTEGRATED, LIQUIDITY, MARKET, OVERVIEW,
+                      SLUGS, TRUST, render_navigation)
 from ui.sidebar import render_sidebar
 from ui.styles import setup_page
 from ui.trust_layer import compute_trust
@@ -44,5 +44,15 @@ PAGE_RENDERERS = {
     OVERVIEW: overview_page.render, MARKET: market_page.render, LIQUIDITY: liquidity_page.render,
     CREDIT: credit_page.render, CONCENTRATION: concentration_page.render, EVENTS: events_page.render,
     INTEGRATED: integration_page.render, DECISIONS: decisions_page.render, TRUST: trust_page.render,
+    GLOSSARY: glossary_page.render,
 }
-PAGE_RENDERERS[page](ctx)
+if page in summaries.BUILDERS:
+    # Every page opens with its summary (verdict, key facts, what to do, method); the full analysis follows in the
+    # Full analysis view, or behind a toggle in the Summary view
+    if page == OVERVIEW:
+        overview_page.how_to_read()
+    summaries.render(page, ctx)
+    if plain.full_analysis(SLUGS[page]):
+        PAGE_RENDERERS[page](ctx)
+else:
+    PAGE_RENDERERS[page](ctx)

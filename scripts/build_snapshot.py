@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 os.environ["RISK_TOOL_SNAPSHOT_RECORD"] = "1"  # before the app's modules are imported
 os.environ.pop("RISK_TOOL_NO_SNAPSHOT", None)
+os.environ["RISK_TOOL_DEFAULT_VIEW"] = "full"  # render every section, so every cached result is recorded
 
 import pandas as pd  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402

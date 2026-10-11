@@ -26,7 +26,7 @@ def _pct(v, digits=0):
 def render(ctx):
     res, m, meta = ctx.conc, ctx.conc_metrics, ctx.conc_factor_meta
     curr = ctx.curr_sym
-    st.subheader(f"🧭 Concentration & factors: {ctx.company_name}")
+    st.subheader(f"Concentration & factors: {ctx.company_name}")
     if meta:
         st.caption(f"Factor data: {meta['source']}, {meta['first_date']} to **{meta['end_date']}** (downloaded "
                    f"{meta['downloaded_on']}). Cite: {meta['citation']}")
@@ -54,7 +54,7 @@ def render(ctx):
                 "crisis-correlation sections apply to portfolios.")
     _rolling(res)
 
-    st.markdown("### 🕳️ What this metric misses")
+    st.markdown("### What this metric misses")
     st.markdown("""
 - **Crowding and common ownership.** Stocks held by the same funds can fall together when those funds sell, beyond what factor loadings show.
 - **Group-company links.** Several holdings from one business group (e.g. Tata, Adani, Bajaj) share governance and funding risk that no return factor captures; Pillar 5 adds a manual group flag.
@@ -66,7 +66,7 @@ def render(ctx):
 
 
 def _factor_table(ctx, res):
-    st.markdown(f"### 🧬 Factor exposures ({res['model']})")
+    st.markdown(f"### Sensitivity to market and style factors (factor exposures, {res['model']})")
     rows = []
     for t, fit in res["fits"].items():
         if fit is None:
@@ -89,7 +89,7 @@ def _factor_risk(ctx, res, curr):
     fr = res["factor_risk"]
     if fr is None:
         return
-    st.markdown("### 🧮 Where the portfolio's risk comes from")
+    st.markdown("### Where the portfolio's risk comes from (principal components and factor share)")
     parts = fr["shares"].rename(index=FACTOR_LABELS)
     fig = go.Figure(go.Bar(x=parts.index, y=parts.to_numpy(), marker_color=MODEL_COLORS[:len(parts)],
                            text=[f"{v:.0%}" for v in parts.to_numpy()], textposition="outside"))
@@ -107,7 +107,7 @@ def _factor_risk(ctx, res, curr):
 
 
 def _concentration(ctx, res):
-    st.markdown("### 🎯 Concentration")
+    st.markdown("### How spread out the risk is (concentration, effective number of bets)")
     c1, c2, c3 = st.columns(3)
     c1.metric("HHI", _num(res["hhi"], 3))
     c2.metric("Effective number of holdings", _num(1 / res["hhi"], 1))
@@ -132,7 +132,7 @@ def _concentration(ctx, res):
 
 
 def _crisis(ctx, res, curr):
-    st.markdown("### 🌪️ Correlation in a crisis")
+    st.markdown("### Diversification left in a crisis (crisis correlation)")
     crisis = res["crisis"]
     if crisis is None:
         st.info("Not every holding has prices back to the crisis windows, so crisis correlation is not available.")
@@ -154,7 +154,7 @@ def _rolling(res):
     rolling = {t: r for t, r in res.get("rolling", {}).items() if len(r)}
     if not rolling:
         return
-    st.markdown("### 📈 One-year market beta over time")
+    st.markdown("### How closely it follows the market over time (one-year beta)")
     fig = go.Figure()
     for i, (t, r) in enumerate(rolling.items()):
         fig.add_scatter(x=r.index, y=r["MKT_RF"], mode="lines", name=t, line=dict(color=MODEL_COLORS[i % len(MODEL_COLORS)]))

@@ -77,6 +77,7 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
 | **Concentration** | Fama-French-Carhart factors (IIMA India, Kenneth French US) with Newey-West errors, factor/specific risk split, effective number of bets, crisis correlation. |
 | **Promoter pledge & governance** | Pledge level and 4-quarter change (promoter encumbrance), the margin-call trigger price and the forced selling in days of volume, with their tested record. Other red flags (ASM/GSM, rating actions, auditor events, F&O ban, group links) each carry an evidence badge. The jump overlay is off by default and kept in the analyst details. |
 | **Integration & decisions** | Linked stress as a price fixed point with a Shapley split and interaction, jump to default, reverse stress (stock and macro space), risk-change attribution, risk-reducing trades, limits, CRO dashboard and one-page memo. |
+| **Plain-language view** | Every page opens with the question it answers, a status (**Clear / Watch / Warning**, always written out), a one-line verdict, the key facts, what to do and the method behind each number. Terms are in plain words with the technical name in brackets ("Bad-day loss (95% 1-day VaR)"); a Glossary page defines them. The sidebar switches between **Summary** and **Full analysis**; the memo opens with an "In plain words" paragraph. |
 
 More: [features and live results](docs/features.md) · [methodology and references](docs/methodology.md) ·
 [case studies and the wider test](docs/case_studies.md) · [deploying](docs/deploy.md) ·
@@ -111,7 +112,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 640 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 645 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).
