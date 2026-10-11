@@ -79,7 +79,7 @@ The **trust layer** shows how far each number can be relied on:
 | **Portfolio** | Daily rebalancing or buy-and-hold. Risk split on a Historical ES, Historical VaR or Parametric VaR basis, with components that add up exactly to the total. Standalone and incremental risk, diversification benefit, correlation heatmap, and a what-if panel to change a weight or add a ticker. |
 | **Stress testing** | 7 Indian and 7 US crises from an editable CSV, with drawdowns and recovery times measured from index data. Historical replay of the position, or a downside-beta proxy when it has no prices; a custom market move; a volatility shock. |
 | **Positions** | Holdings entered as weights, share counts or money values, each stored as quantity, price, value, weight and sector. |
-| **Data layer** | Open, high, low, close and volume, with NSE and BSE volume summed where Yahoo has both. Annual fundamentals mapped to one set of field names, which a CSV upload can override field by field; each figure shows its source. Loaders and validators for Indian disclosure files, listed in a manifest with source and date; a dated NSE snapshot ships with the repo (scripts/fetch_disclosures.py, parsers in nse_sources.py). |
+| **Data layer** | Open, high, low, close and volume, with NSE and BSE volume summed where Yahoo has both. Annual fundamentals mapped to one set of field names, which a CSV upload can override field by field; each figure shows its source. Loaders and validators for Indian disclosure files, listed in a manifest with source and date; no NSE lists ship with the repo (NSE's terms reserve redistribution): users upload their own in the app, which validates them (parsers in nse_sources.py). |
 | **Data quality** | Adjusted prices, exchange-timezone dates, a visible data source, and warnings for suspicious moves. Each holding gets a 0–100 data-quality score, from checks for reversing spikes, stale prices, zero-volume days, gaps, short history and missing fundamentals. Data are never altered silently. |
 | **Trust** | 90% ranges for every model's VaR and ES: a stationary block bootstrap (Politis-White block length) for the unconditional models, a residual bootstrap with today's volatility fixed for EWMA and FHS, and asymptotic parameter draws for GARCH-t and Monte Carlo. A–D grades come from written rules: range width, model dispersion, backtest, data quality, sample length, and the share of inputs that are assumptions. Also the model-risk add-on, lookback sensitivity, and the ghost effect in Historical VaR. |
 | **Liquidity** | ADV, days to liquidate and share sellable in 1/5/10 days; the SEBI/AMFI-style stress test (with a fund-validation upload); crisis-window volume; Corwin-Schultz spread, Bangia spread cost, square-root impact and the liquidity-adjusted VaR waterfall; Amihud illiquidity; price bands (official or inferred), lower-circuit history and the exit-freeze loss. Every assumption (participation rate, k, Y, freeze length) is editable in the sidebar. |
@@ -152,7 +152,7 @@ The engine is a price fixed point: lenders' forced pledge sales and your own exi
 
 ### Event risk (official NSE data as of 2 Oct 2026)
 
-The repo ships a dated NSE snapshot (`scripts/fetch_disclosures.py`): price bands, F&O bans, ASM/GSM lists, promoter pledges from each quarter's shareholding XBRL, and credit-rating disclosures.
+These results used a dated NSE snapshot (price bands, F&O bans, ASM/GSM lists, promoter pledges from each quarter's shareholding XBRL, and credit-rating disclosures). Since 12 Oct 2026 the repo no longer ships it (NSE's terms reserve redistribution); upload the same files in the app to reproduce the table.
 
 | Stock | Tier | What fired |
 | --- | --- | --- |
@@ -375,7 +375,7 @@ case_studies/          Evidence: cases.json, engine.py (flags, baselines), run.p
 universe.py            The wider test on every NSE stock (bhavcopies, corporate actions) and the jump base rates
 event_universe.py      The event pillar tested on every NSE stock, 2021–2024 (shareholding history, point in time)
 warnings_v2.py         Early-warning rules v2 (own-history and peer ES, volatility shock, logistic score), tested out of sample
-data/disclosures/      Bundled NSE snapshot (raw JSON in raw/), manifest.json, templates and sources
+data/disclosures/      Templates and sources; your own NSE files and manifest.json (git-ignored)
 data/credit/           Agency default-rate tables (CRISIL, ICRA FY2025 studies) and the DD reference universe
 excel_exporter.py      Formatted Excel report
 docs/                  methodology.md (formulas, references), case_studies.md (evidence), features.md, deploy.md, interview_story.md

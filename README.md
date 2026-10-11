@@ -112,26 +112,29 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 645 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 648 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).
 
-**Data refresh scripts** (in `scripts/`):
+**Data refresh scripts** (in `scripts/`). The NSE downloaders are no longer run: NSE's terms forbid automated
+collection without its written permission ([data sources](docs/data_sources.md)).
+
 
 | Script | Refreshes |
 | --- | --- |
-| `fetch_disclosures.py` | NSE pledges, bands, surveillance and ratings |
+| `fetch_disclosures.py` | NSE pledges, bands, surveillance and ratings (not run since Oct 2026) |
 | `fetch_bank_results.py` | Bank results XBRL |
 | `refresh_factor_data.py` | Factor files |
-| `fetch_bhavcopy.py` + `run_universe.py` | The wider test |
+| `fetch_bhavcopy.py` + `run_universe.py` | The wider test (not run since Oct 2026) |
 | `build_snapshot.py` | The demo snapshot |
 
 ## Limits, in short
 
 - Long-only, single-currency portfolios.
 - Merton PDs are risk-neutral.
-- Price bands and pledges are a dated snapshot of NSE files.
+- No NSE lists ship with the repo: pledges, price bands, surveillance, F&O bans and ratings come from files you
+  upload, and the pledge page says "not checked" without them.
 - The event tiers' jump risk is calibrated on disclosure data for 2021–2024 only (NSE's pledge history starts in
   September 2021), and pledges are measured together with other encumbrances before mid-2025.
 - The wider test covers price-based flags only.

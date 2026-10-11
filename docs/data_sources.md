@@ -51,13 +51,16 @@ The bulk NSE datasets that only the research scripts read are **no longer tracke
 They stay on the owner's computer (git-ignored), so every script and re-run still works locally. Earlier commits in
 git history still contain them; rewriting history is a separate decision.
 
-The small current lists the live app reads (price bands, F&O bans, pledges, ratings and surveillance of
-2 Oct 2026) stay committed until NSE replies. They would be removed, or replaced by permitted sources, if
-permission is refused. The table shows each file's status:
+The small current lists the app read (price bands, F&O bans, pledges, ratings and surveillance of 2 Oct 2026)
+were **untracked on 12 Oct 2026** as well, by the owner's decision to continue without NSE data. The repository
+now ships no NSE lists. Users download the lists from NSE themselves (NSE allows personal use) and upload them in
+the app (Overview → Disclosure data, or the Promoter Pledge & Governance page). Uploads last for the session. Run
+locally, the app also reads files saved in `data/disclosures/` with a manifest; these are git-ignored. With no files,
+the pledge page says "not checked" instead of showing a clear status. The table shows each file's status:
 
 | Kind | Files |
 | --- | --- |
-| NSE lists and filings, close to raw | **Untracked, kept locally:** `data/disclosures/raw/`, `data/disclosures/history/shareholding_2021_2024*.csv`, `case_studies/data/disclosures/pledges_nse_history_2021_2024.csv`, `case_studies/data/prices/DHFL.csv`. **Still committed, pending NSE's reply:** `data/disclosures/` current lists (sec_list, fo_secban, pledges, ratings, surveillance) |
+| NSE lists and filings, close to raw | **Untracked, kept locally:** `data/disclosures/raw/`, `data/disclosures/history/shareholding_2021_2024*.csv`, `case_studies/data/disclosures/pledges_nse_history_2021_2024.csv`, `case_studies/data/prices/DHFL.csv`. `data/disclosures/` current lists (sec_list, fo_secban, pledges, ratings, surveillance) and their manifest (untracked 12 Oct 2026) |
 | Values taken from company filings on NSE | `data/banks/*.csv` (results XBRL and annual reports); `case_studies/data/fundamentals/*.csv` (annual reports) |
 | Small test excerpts | `test_data/nse/*` |
 | Derived statistics only | `case_studies/results/*` (lifts, counts, rates); `case_studies/results/warnings_v2_reference.json` (ES percentiles) |

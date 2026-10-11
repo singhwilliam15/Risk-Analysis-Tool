@@ -9,6 +9,7 @@ import json
 import numpy as np
 import pandas as pd
 import pytest
+from pathlib import Path
 
 import disclosures as D
 
@@ -160,18 +161,43 @@ def test_bad_manifest_json(tmp_path):
     assert "not valid JSON" in D.load_disclosures(tmp_path)["issues"][0]
 
 
-def test_shipped_folder_loads_cleanly():
-    """The bundled NSE snapshot (scripts/fetch_disclosures.py): every file listed, every row valid."""
-    result = D.load_disclosures()
+LOCAL = Path(__file__).parent / "data" / "disclosures"
+
+
+@pytest.mark.skipif(not (LOCAL / "manifest.json").exists(), reason="no local NSE lists (the repository ships none)")
+def test_local_folder_loads_cleanly():
+    """The owner's local NSE lists (git-ignored; scripts/fetch_disclosures.py): every file listed, every row valid."""
+    result = D.load_disclosures(LOCAL)
     assert result["issues"] == []
     assert (result["files"]["Rejected rows"] == 0).all() and (result["files"]["Rows"] > 0).all()
-    assert {"price_bands", "fo_ban", "surveillance", "pledges", "ratings"} <= {
-        d for d, frame in result["data"].items() if not frame.empty}
-    # Jaiprakash Power's 30 Jun 2026 filing: 72.99% of the promoter holding pledged, public on 13 Jul 2026
     pledges = result["data"]["pledges"]
-    jp = pledges[(pledges["symbol"] == "JPPOWER") & (pd.to_datetime(pledges["quarter_end"]) == "2026-06-30")].iloc[0]
-    assert jp["pledged_pct_of_promoter"] == pytest.approx(72.99) and jp["disclosure_date"] == pd.Timestamp("2026-07-13")
-    assert D.as_of_stamp(result["files"]).startswith("Data as of: ")
+    jp = pledges[(pledges["symbol"] == "JPPOWER") & (pd.to_datetime(pledges["quarter_end"]) == "2026-06-30")]
+    if len(jp):  # Jaiprakash Power's 30 Jun 2026 filing: 72.99% of the promoter holding pledged
+        assert jp.iloc[0]["pledged_pct_of_promoter"] == pytest.approx(72.99)
+
+
+def test_the_repository_ships_no_nse_lists():
+    """NSE's terms reserve redistribution: the current lists are git-ignored and tests see an empty folder."""
+    ignored = (Path(__file__).parent / ".gitignore").read_text(encoding="utf-8")
+    assert "data/disclosures/*.csv" in ignored and "data/disclosures/manifest.json" in ignored
+    result = D.load_disclosures()
+    assert result["files"].empty and all(frame.empty for frame in result["data"].values())
+
+
+def test_uploaded_files_are_added():
+    """Uploads (official layout or template) join the loaded data with their as-of date; bad rows are reported."""
+    pledges = ("symbol,quarter_end,promoter_holding_pct,pledged_pct_of_promoter,pledged_pct_of_total,pledged_shares,"
+               "disclosure_date\nJPPOWER,2026-06-30,24.0,72.99,17.52,1200000000,2026-07-13\n").encode()
+    ban = b"Securities in Ban For Trade Date 01-OCT-2026:\n1,SAIL\n2,RBLBANK\n"
+    result = D.add_uploads(D.load_disclosures(), [
+        {"name": "pledges.csv", "dataset": "pledges", "as_of": "2026-10-02", "content": pledges},
+        {"name": "fo_secban.csv", "dataset": "fo_ban", "as_of": "2026-10-01", "content": ban}])
+    assert result["data"]["pledges"].iloc[0]["pledged_pct_of_promoter"] == pytest.approx(72.99)
+    assert set(result["data"]["fo_ban"]["symbol"]) == {"SAIL", "RBLBANK"}
+    assert result["files"]["Source"].tolist() == ["uploaded by you"] * 2 and result["issues"] == []
+    bad = D.add_uploads(D.load_disclosures(), [{"name": "x.csv", "dataset": "pledges", "as_of": "2026-10-02",
+                                                "content": b"symbol,quarter_end\nAAA,notadate\n"}])
+    assert bad["issues"] and bad["issues"][0].startswith("x.csv (uploaded)")
 
 
 def test_templates_match_the_schemas(tmp_path):
@@ -179,5 +205,5 @@ def test_templates_match_the_schemas(tmp_path):
     assert len(paths) == len(D.DATASETS)
     for name, spec in D.DATASETS.items():
         assert pd.read_csv(tmp_path / f"{name}_template.csv").columns.tolist() == spec.column_names
-        shipped = D.DISCLOSURE_DIR / "templates" / f"{name}_template.csv"
+        shipped = LOCAL / "templates" / f"{name}_template.csv"  # the templates ship with the repository
         assert pd.read_csv(shipped).columns.tolist() == spec.column_names

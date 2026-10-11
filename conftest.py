@@ -23,6 +23,8 @@ os.environ["RISK_TOOL_NO_SNAPSHOT"] = "1"
 os.environ["RISK_TOOL_SNAPSHOT_URL"] = ""
 # ... and open in the Full analysis view, so every section renders (test_app.py checks the Summary view itself)
 os.environ["RISK_TOOL_DEFAULT_VIEW"] = "full"
+# ... and see no local NSE lists (the repository ships none; on the owner's computer they are git-ignored files)
+os.environ["RISK_TOOL_DISCLOSURE_DIR"] = os.path.join(os.path.dirname(__file__), "test_data", "no_disclosures")
 
 PERIOD_DAYS = {"1y": 250, "2y": 500, "5y": 1250, "max": 2600}
 LAST_DATE = "2026-09-30"

@@ -2,13 +2,15 @@
 
 > **Redistribution:** NSE's Terms of Use reserve redistribution of its content for NSE's written permission (see
 > [docs/data_sources.md](../../docs/data_sources.md)). The raw JSON in `raw/` and the 2021–2024 shareholding history are
-> kept locally only; the small current lists below stay committed until NSE replies to the permission request.
+> kept locally only. Since 12 Oct 2026 the current lists are git-ignored too: **the repository ships no NSE lists.**
+> Upload your own in the app (Overview → Disclosure data), or save them here with a `manifest.json` when running
+> locally.
 
 The event, credit and liquidity pillars use Indian disclosure data from **official sources only**. The tool never estimates or fills in these figures.
 
-## Bundled snapshot and refresh
+## Local files (not committed)
 
-The files in this folder are a dated snapshot from NSE, written by `python scripts/fetch_disclosures.py`. Its as-of dates are on the Overview and Events pages. The script reads NSE's public endpoints at about one request a second and stops if NSE refuses:
+On the owner's computer this folder holds a dated snapshot from NSE, written by `python scripts/fetch_disclosures.py` before NSE's terms were found (the script is no longer run). Its as-of dates are on the Overview and Events pages. The script reads NSE's public endpoints at about one request a second and stops if NSE refuses:
 
 | Dataset | NSE source | Written as |
 | --- | --- | --- |

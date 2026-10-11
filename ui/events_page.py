@@ -29,7 +29,7 @@ RED_FLAGS = {  # signal: (plain words with the technical term, evidence id)
     "circuit": ("Repeated lower circuits (lower-circuit days)", "liquidity"),
     "merton": ("Close to default on market values (Merton DD; RBI PCA for banks)", "merton"),
 }
-EXPECTED = ("pledges", "surveillance", "fo_ban", "ratings")  # files the repository normally loads
+EXPECTED = ("pledges", "surveillance", "fo_ban", "ratings")  # files the page needs (uploaded, or saved locally)
 BY_DESIGN = {"auditor": "no permitted source, see docs/data_sources.md", "group": "no group tags entered",
              "merton": "no statements, or not modelled"}
 
@@ -86,7 +86,7 @@ def render(ctx):
 
     st.subheader(f"Promoter Pledge & Governance Risk: {ctx.company_name}")
     st.caption("The question: could the owners' borrowing against their shares (promoter pledges), or a governance red "
-               "flag, set off a sudden fall? Official NSE files, point in time; see Overview → Disclosure data.")
+               "flag, set off a sudden fall? Official NSE files you load, point in time; see Overview → Disclosure data.")
     checked, not_checked, fixable = coverage(ctx)
     coverage_line(checked, not_checked, as_of_stamp(ctx.disclosures["files"]).replace("Data as of: ", ""), fixable)
 

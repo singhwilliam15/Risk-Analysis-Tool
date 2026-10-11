@@ -12,6 +12,7 @@ import streamlit as st
 import memo
 from disclosures import DATASETS, as_of_stamp, template
 from fundamentals import FIELDS_BY_NAME, PROFILE_FIELDS, STATEMENTS, fundamentals_template, statement_table
+from ui import disclosure_upload
 from ui.foundations import OVERRIDES_KEY
 from ui.overview import render_overview
 
@@ -156,15 +157,17 @@ def _disclosures(ctx):
     st.markdown("### Disclosure data (India)")
     disclosures = ctx.disclosures
     if disclosures["files"].empty:
-        st.info("No disclosure files are loaded yet. Pledges, surveillance lists, price bands, the F&O ban list, rating "
+        st.info("No disclosure files are loaded. Pledges, surveillance lists, price bands, the F&O ban list, rating "
                 "actions and auditor events come only from files you download from NSE, BSE and the rating agencies; "
-                "the tool never fills them in. Save each file in data/disclosures/ and list it in manifest.json "
-                "(see data/disclosures/README.md).")
+                "the tool never fills them in. NSE's terms do not allow this project to republish its lists, so none "
+                "ship with it: upload them below (they stay in your session), or save them in data/disclosures/ with a "
+                "manifest when running locally (data/disclosures/README.md).")
     else:
         st.markdown(f"**{as_of_stamp(disclosures['files'])}**")
         st.dataframe(disclosures["files"], hide_index=True, width="stretch")
     if disclosures["issues"]:
         st.warning("Disclosure files with problems:\n\n" + "\n".join(f"- {i}" for i in disclosures["issues"][:20]))
+    disclosure_upload.render("overview_upload")
     with st.expander("Where each dataset comes from, and templates"):
         name = st.selectbox("Dataset", list(DATASETS), format_func=lambda n: DATASETS[n].title, key="disclosure_dataset")
         spec = DATASETS[name]

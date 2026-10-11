@@ -242,14 +242,14 @@ def test_concentration_page(fake_market, mode):
 def test_events_page_without_disclosures(fake_market, mode, monkeypatch, tmp_path):
     import disclosures
     import ui.foundations
-    # An empty disclosure folder (the repo ships a dated NSE snapshot, see the next tests)
+    # An empty disclosure folder (as in the repository, which ships no NSE lists)
     monkeypatch.setattr(ui.foundations, "load_disclosures", lambda: disclosures.load_disclosures(tmp_path))
     at = run_app(mode if mode == "Portfolio" else None, page="Promoter Pledge & Governance")
     assert_clean(at)
     assert any(s.value.startswith("Promoter Pledge & Governance Risk") for s in at.subheader)
     assert any(c.value.startswith("Checked ") and "Not checked" in c.value for c in at.caption)
-    # Only fixable gaps warn (files normally loaded); auditor events are missing by design and only in the line
-    assert any("Missing data that is normally loaded" in w.value for w in at.warning)
+    # Only fixable gaps warn (files the page needs, which the user can upload); auditor events are missing by design
+    assert any(w.value.startswith("Not loaded:") and "upload" in w.value for w in at.warning)
     assert not any("Auditor" in w.value for w in at.warning)
     core = next(d.value for d in at.dataframe if "Pledged (% of promoter holding)" in d.value.columns)
     assert (core["Pledged (% of promoter holding)"] == "not available").all()
@@ -440,3 +440,20 @@ def test_how_to_read_note_can_be_dismissed(fake_market):
     at.button(key="how_to_read_ok").click()
     at.run()
     assert not any(m.value.startswith("**How to read this tool.**") for m in at.markdown)
+
+
+def test_pledge_page_without_files_says_not_checked_and_takes_an_upload(fake_market):
+    """No NSE lists ship with the repository: the page says 'not checked' and offers an upload; an uploaded
+    pledge filing then drives the verdict (session state stands in for the file uploader)."""
+    from ui.disclosure_upload import UPLOADS_KEY
+    at = summary_view(run_app(page="Promoter Pledge & Governance"))
+    assert_clean(at)
+    assert any("Watch: not checked: no pledge files are loaded." in m.value for m in at.markdown)
+    assert any(u.label == "Disclosure files" for u in at.get("file_uploader"))
+    filing = ("symbol,quarter_end,promoter_holding_pct,pledged_pct_of_promoter,pledged_pct_of_total,pledged_shares,"
+              "disclosure_date\nASIANPAINT,2026-06-30,50.0,60.0,30.0,1000,2026-07-13\n").encode()
+    at.session_state[UPLOADS_KEY] = [{"name": "pledges.csv", "dataset": "pledges", "as_of": "2026-09-30", "content": filing}]
+    at.run()
+    assert_clean(at)
+    verdict = next(m.value for m in at.markdown if m.value.startswith("#### "))
+    assert "not checked" not in verdict and "60.0% of the owners' shares" in " ".join(m.value for m in at.markdown)

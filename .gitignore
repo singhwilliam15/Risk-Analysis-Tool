@@ -13,3 +13,6 @@ data/disclosures/history/shareholding_*.csv
 data/disclosures/raw/
 case_studies/data/disclosures/pledges_nse_history_*.csv
 case_studies/data/prices/*.csv
+# The current NSE lists the app reads (since 12 Oct 2026): users upload their own, or keep them here locally
+data/disclosures/*.csv
+data/disclosures/manifest.json

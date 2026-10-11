@@ -17,6 +17,7 @@ download date and coverage. A file without a manifest entry is not loaded, becau
 
 import io
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,7 +25,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DISCLOSURE_DIR = Path(__file__).parent / "data" / "disclosures"
+# Local files only: the repository ships no NSE lists. RISK_TOOL_DISCLOSURE_DIR points elsewhere (tests use an empty folder).
+DISCLOSURE_DIR = Path(os.environ.get("RISK_TOOL_DISCLOSURE_DIR") or Path(__file__).parent / "data" / "disclosures")
 MANIFEST_NAME = "manifest.json"
 MANIFEST_KEYS = ("file", "dataset", "source_url", "downloaded_on", "coverage_start", "coverage_end")
 
@@ -418,3 +420,29 @@ def load_disclosures(directory: Path = DISCLOSURE_DIR) -> dict:
                 issues.append(f"{path.name}: not in {MANIFEST_NAME}, so not loaded (its source is unknown).")
     data = {name: (pd.concat(parts, ignore_index=True) if parts else template(name)) for name, parts in frames.items()}
     return {"data": data, "files": pd.DataFrame(summary), "issues": issues}
+
+
+def add_uploads(result: dict, uploads: list) -> dict:
+    """
+    Add files the user uploaded in the app to a load_disclosures() result. Each upload is
+    {"name", "dataset", "as_of", "content"} (content: the file's bytes or text). The repository ships no NSE lists
+    (NSE's terms reserve redistribution), so these uploads, or files saved locally with a manifest, are the only source.
+    """
+    if not uploads:
+        return result
+    data = {k: v.copy() for k, v in result["data"].items()}
+    summary, issues = [result["files"]], list(result["issues"])
+    for up in uploads:
+        clean, errors, notes = load_file(io.BytesIO(up["content"]) if isinstance(up["content"], bytes) else up["content"],
+                                         up["dataset"], as_of=up["as_of"])
+        issues += [f"{up['name']} (uploaded): {e}" for e in errors]
+        as_of = pd.Timestamp(up["as_of"]).strftime("%Y-%m-%d")
+        clean = clean.assign(file=up["name"], source_url="uploaded by you", downloaded_on=pd.Timestamp(up["as_of"]))
+        current = data[up["dataset"]]
+        data[up["dataset"]] = clean if current.empty else pd.concat([current, clean], ignore_index=True)
+        summary.append(pd.DataFrame([{"File": up["name"], "Dataset": DATASETS[up["dataset"]].title, "As of": as_of,
+                                      "Rows": len(clean), "Rejected rows": len(errors), "Coverage": f"{as_of} (uploaded)",
+                                      "Downloaded": as_of, "Source": "uploaded by you", "Notes": " ".join(notes)}]))
+    files = pd.concat([s for s in summary if not s.empty], ignore_index=True) if any(not s.empty for s in summary) \
+        else result["files"]
+    return {"data": data, "files": files, "issues": issues}

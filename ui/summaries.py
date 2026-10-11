@@ -153,6 +153,16 @@ def _concentration(ctx) -> dict:
 
 
 def _events(ctx) -> dict:
+    if ctx.disclosures["data"]["pledges"].empty:
+        return {
+            "question": "Could the owners' borrowing, or a governance red flag, set off a sudden fall?",
+            "status": WATCH, "verdict": "not checked: no pledge files are loaded.",
+            "facts": [(term("pledge"), "not loaded", "NSE's terms do not allow this project to republish them")],
+            "grades": [],
+            "action": "Download the shareholding pattern (or the template) and upload it on this page or on Overview.",
+            "methods": [f"Official filings you load, point in time; methodology {plain.VOCAB['pledge'][3]}."],
+            "chips": ["e1", "e2"],
+        }
     tiers = {t: r["tier"] for t, r in ctx.event_tiers.items()}
     status = plain.worst(*[TIER_STATUS.get(v, CLEAR) for v in tiers.values()])
     flagged = [t for t, v in tiers.items() if v != "Low"]
@@ -320,4 +330,9 @@ def render(page: str, ctx) -> dict:
         plain.evidence_chip(chip)
     for m in parts["methods"]:
         plain.method_line(m)
+    if page == P.EVENTS and ctx.disclosures["data"]["pledges"].empty:
+        # The repository ships no NSE lists, so the upload sits in the summary, visible in both views
+        from ui import disclosure_upload
+        with st.expander("Upload disclosure files (pledges, surveillance, F&O ban, ratings)", expanded=True):
+            disclosure_upload.render("pledge_upload")
     return parts

@@ -3,10 +3,11 @@
 import streamlit as st
 
 from data_quality import assess_holding
-from disclosures import load_disclosures
+from disclosures import add_uploads, load_disclosures
 from fundamentals import apply_overrides
 from ui.cache import cached_fundamentals
 from ui.context import export
+from ui.disclosure_upload import uploads
 
 OVERRIDES_KEY = "fundamental_overrides"  # session state: the uploaded override table, if any
 
@@ -26,5 +27,5 @@ def load_foundations(ctx):
             fundamentals_by_ticker[ticker] = fund
 
     quality = {t: assess_holding(df, fundamentals_by_ticker.get(t)) for t, df in price_frames.items()}
-    disclosures = load_disclosures()
+    disclosures = add_uploads(load_disclosures(), uploads())  # local files with a manifest, plus this session's uploads
     export(ctx, locals())
