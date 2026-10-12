@@ -354,6 +354,43 @@ model already carries the history of these stocks' falls. This now holds on disc
 the price-based proxies above, but only for 2021–2024. That period had no collapse on the scale of Zee or DHFL among
 heavily pledged companies.
 
+## Margin-trigger distance: every NSE stock, 2022–2024 (October 2026)
+
+**Question:** among stocks whose promoters have encumbered their shares, does being close to the pledge
+margin-call trigger warn of a ≥ 50% fall within 12 months better than the encumbrance level alone? The test was
+pre-registered ([pre-registration](preregistration_margin_trigger.md)) and run once on data already held locally, as
+planned after NSE's terms stopped new downloads ([v6 adjustments](plans/v6_adjustments.md)).
+
+**Setup:**
+- the loan is sized at the close on the filing's broadcast date, with 2× cover, and lenders sell at 1.5×;
+- distance to the trigger d = 1 − 0.75 × P0 / Pt;
+- **M1** = encumbered ≥ 20% of promoter holding and d < 10%;
+- 27 month-ends, Oct 2022 – Dec 2024, 49,244 stock-dates.
+
+**Main answer: not supported.** Within the 5,069 stock-dates encumbered ≥ 20%, the 645 close to the trigger crashed
+14.1% of the time, against 11.0% for the rest. The crash-rate ratio is 1.29, and its 90% range of **0.93–2.25
+includes 1**. The ratio is similar with ≥ 50% encumbrance (1.31, range 0.90–2.93) and under 1.75×/1.25× cover
+(1.33, range 0.94–2.44). In the liquid subset it is 0.88 (range 0.46–1.40).
+
+| Fall to trigger (encumbered ≥ 20%) | Stock-dates | Crashes | Crash rate |
+| --- | --- | --- | --- |
+| < 10% (incl. past the trigger) | 645 | 91 | 14.1% |
+| 10–25% | 1,865 | 222 | 11.9% |
+| > 25% | 2,559 | 263 | 10.3% |
+
+**M1 as a warning signal** (evidence badge, methodology §15.5):
+- **It warns:** lift 2.27 (90% range 1.73–3.85).
+- **It does not beat momentum:** lift − lift(momentum) −0.13 (range −0.49 to +0.64).
+- **It still adds information beyond momentum:** among stocks not already down 30%, the lift is 1.92 (range
+  1.55–2.63).
+- **Badge:** "Tested · weaker than momentum".
+
+**Reading.** The rates rise steadily as the trigger gets closer, but the gradient is too weak to confirm with 27
+month-ends. Much of M1's warning comes from the encumbrance and the price fall it requires, both of which the
+pledge rule and momentum already capture.
+
+Files: `case_studies/results/margin_trigger_*.csv` and `margin_trigger_decision.json`.
+
 ## Jump defaults: recalibrated on NSE-wide base rates (review M2)
 
 Until October 2026 the overlay assumed 0.1% a day for Elevated (J = −10%) and 0.5% a day for High (J = −20%). Those are **22% and 72% chances of at least one such jump a year**. They were "confirmed" on warned dates in the crash-selected case set above, which is circular: those dates were chosen because the stocks collapsed.

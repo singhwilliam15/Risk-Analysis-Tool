@@ -885,7 +885,23 @@ The Market page's "Signals with a tested record" panel lists every signal in thi
 for each NSE holding. Lifts come from different windows: price rules 2020–24, pledge rules Oct 2022 – Dec 2024, and
 the v1 liquidity and stress flags 2016–24 without a range. They are best compared within a window.
 
-### 15.6 Plain-language presentation (`ui/plain.py`, `ui/summaries.py`, October 2026)
+### 15.6 Margin-trigger distance (`margin_trigger.py`, October 2026)
+
+This test was pre-registered in `docs/preregistration_margin_trigger.md`.
+- **Distance to the trigger:** d = 1 − (trigger / initial) × P0 / Pt. The loan is sized at the close on the filing's
+  broadcast date (P0), with 2× initial cover and a 1.5× trigger.
+- **M1:** encumbered ≥ 20% of promoter holding and d < 10%.
+
+**Result (Oct 2022 – Dec 2024):**
+- Within encumbered stocks, being close to the trigger is **not** confirmed to add to the encumbrance level: rate
+  ratio 1.29, 90% range 0.93–2.25.
+- As a signal, M1 warns (lift 2.27), but it is weaker than momentum, so its badge is "Tested · weaker than
+  momentum".
+
+**In the app:** the Market panel shows whether M1 fires now for each holding. The app's own margin-call card sizes
+the loan at today's price instead, so its distance is always 25% at the default covers.
+
+### 15.7 Plain-language presentation (`ui/plain.py`, `ui/summaries.py`, October 2026)
 
 Presentation only: no number, rule or threshold changes. Each page opens with a status word from rules that already
 exist:

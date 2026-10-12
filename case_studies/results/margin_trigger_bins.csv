@@ -1,0 +1,13 @@
+Fall to trigger,Stock-dates,Crashes,Crash rate,Sample
+< 10% (incl. past the trigger),645,91,0.14108527131782947,primary: encumbered ≥ 20%
+10–25%,1865,222,0.11903485254691688,primary: encumbered ≥ 20%
+> 25%,2559,263,0.1027745212973818,primary: encumbered ≥ 20%
+< 10% (incl. past the trigger),392,58,0.14795918367346939,encumbered ≥ 50%
+10–25%,1007,113,0.11221449851042702,encumbered ≥ 50%
+> 25%,1360,154,0.11323529411764706,encumbered ≥ 50%
+< 10% (incl. past the trigger),178,15,0.08426966292134831,"liquid, encumbered ≥ 20%"
+10–25%,842,84,0.0997624703087886,"liquid, encumbered ≥ 20%"
+> 25%,1348,126,0.09347181008902077,"liquid, encumbered ≥ 20%"
+< 10% (incl. past the trigger),479,70,0.14613778705636743,sensitivity 1.75×/1.25×
+10–25%,1277,163,0.12764291307752546,sensitivity 1.75×/1.25×
+> 25%,3313,343,0.10353154240869303,sensitivity 1.75×/1.25×

@@ -47,6 +47,7 @@ SIGNALS = {
     "auditor": "Auditor resigned or qualified the accounts (auditor events)",
     "group": "Several holdings from one business group (group links)",
     "merton": "Close to default on market values (Merton distance to default; RBI PCA for banks)",
+    "m1": "Close to the lenders' selling price (M1, encumbered ≥ 20% and within 10% of the pledge margin-call trigger)",
 }
 UNTESTED_IDS = ("surveillance", "fo_ban", "rating", "auditor", "group", "merton")
 PHASE_F = "NSE, month-ends 2020–24, out of sample (pre-registered)"
@@ -102,6 +103,17 @@ def registry() -> pd.DataFrame:
                              e.loc[sid, "Difference 5%"], ib.loc[sid, "Lift"], ib.loc[sid, "Lift 5%"],
                              ib.loc[sid, "Lift 95%"], "case_studies/results/events_*.csv",
                              "tested on 'pledged or otherwise encumbered' (filings to mid-2025)"))
+    except (FileNotFoundError, KeyError):
+        pass
+    try:
+        mb = pd.read_csv(RESULTS / "margin_trigger_bootstrap.csv")
+        mb = mb[mb["Universe"] == "all"].set_index("Rule")
+        mi = pd.read_csv(RESULTS / "margin_trigger_incremental_bootstrap.csv")
+        mi = mi[mi["Universe"] == "all"].set_index("Rule")
+        rows.append(_row("m1", PHASE_G, mb.loc["m1", "Lift"], mb.loc["m1", "Lift 5%"], mb.loc["m1", "Lift 95%"],
+                         mb.loc["m1", "Difference 5%"], mi.loc["m1", "Lift"], mi.loc["m1", "Lift 5%"],
+                         mi.loc["m1", "Lift 95%"], "case_studies/results/margin_trigger_*.csv",
+                         "pre-registered Oct 2026 (docs/preregistration_margin_trigger.md); loan sized at the filing date"))
     except (FileNotFoundError, KeyError):
         pass
     try:

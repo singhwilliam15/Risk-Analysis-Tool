@@ -15,6 +15,7 @@ import streamlit as st
 
 import events as E
 import evidence as V
+import margin_trigger as M
 import warnings_v2 as W
 from case_studies import engine as K
 from events import load_rules
@@ -80,6 +81,10 @@ def holding_flags(ctx, ticker: str, data: dict, market) -> dict:
         if a.get("available"):
             flags.update({sid: a.get(f"flag_{sid}") for sid in PRICE_RULES})
     flags.update(event_flags(ctx.event_signals.get(ticker, {}), load_rules()))
+    pledge = ctx.event_signals.get(ticker, {}).get("pledge")
+    if res["success"]:
+        closes = _frame(res).set_index("Date")["Close"]
+        flags["m1"] = M.m1_now(pledge and pledge["pledged_pct_of_promoter"], pledge and pledge.get("disclosure_date"), closes)
     return flags
 
 

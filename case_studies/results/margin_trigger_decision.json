@@ -1,0 +1,14 @@
+{
+  "close_adds_beyond_encumbrance": false,
+  "m1": {
+    "warns": true,
+    "beats momentum": false,
+    "adds information beyond momentum": true
+  },
+  "coverage": {
+    "stock_dates": 49244,
+    "dates": 27,
+    "encumbered_20_with_distance": 5069,
+    "close_to_trigger": 645
+  }
+}

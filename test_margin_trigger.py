@@ -49,3 +49,23 @@ def test_rate_ratio_bootstrap_recovers_a_known_ratio():
     r = M.rate_ratio_bootstrap(pd.concat(rows), "flag_m1", n_boot=300)
     assert 3.0 < r["ratio"] < 5.5 and r["low"] < r["ratio"] < r["high"] and r["low"] > 1
     assert r["dates"] == 27 and r["n_close"] + r["n_far"] == 27 * 400
+
+
+def test_m1_now_sizes_the_loan_at_the_filing_date():
+    closes = pd.Series([100.0, 100.0, 80.0, 82.0], index=pd.bdate_range("2026-07-01", periods=4))
+    # broadcast on day 2 at 100: today 82 → d = 1 − 75/82 ≈ 8.5% < 10%
+    assert M.m1_now(60.0, closes.index[1], closes) is True
+    assert M.m1_now(10.0, closes.index[1], closes) is False          # not encumbered enough
+    assert M.m1_now(60.0, closes.index[3], closes) is False          # loan sized today: 25% away
+    assert M.m1_now(None, closes.index[1], closes) is None and M.m1_now(60.0, "2020-01-01", closes) is None
+
+
+def test_committed_decision_matches_the_results():
+    """The pre-registered reading, from the committed results: not supported beyond the encumbrance level."""
+    import json
+    from pathlib import Path
+    results = Path(__file__).parent / "case_studies" / "results"
+    decision = json.loads((results / "margin_trigger_decision.json").read_text())
+    ratio = pd.read_csv(results / "margin_trigger_rate_ratio.csv").iloc[0]
+    assert decision["close_adds_beyond_encumbrance"] == bool(ratio["low"] > 1) is False
+    assert decision["m1"] == {"warns": True, "beats momentum": False, "adds information beyond momentum": True}

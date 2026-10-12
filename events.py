@@ -66,7 +66,8 @@ def pledge_signal(pledges: pd.DataFrame, symbol: str, as_of) -> dict:
             "pledged_pct_of_total": float(last["pledged_pct_of_total"]) if pd.notna(last.get("pledged_pct_of_total")) else np.nan,
             "pledged_shares": float(last["pledged_shares"]) if pd.notna(last.get("pledged_shares")) else np.nan,
             "promoter_holding_pct": float(last["promoter_holding_pct"]), "change_4q_pp": change,
-            "quarter_end": pd.Timestamp(last["quarter_end"])}
+            "quarter_end": pd.Timestamp(last["quarter_end"]),
+            "disclosure_date": pd.Timestamp(last["disclosure_date"]) if pd.notna(last.get("disclosure_date")) else None}
 
 
 def stage_number(stage) -> int:

@@ -67,6 +67,21 @@ def add_distance(rows: pd.DataFrame, index: pd.DataFrame, initial: float = INITI
     return df
 
 
+def m1_now(pledged_pct, disclosure_date, closes: pd.Series):
+    """
+    M1 for one holding today, as tested: encumbered ≥ 20% and within 10% of the trigger, the loan sized at the close
+    on or before the filing's broadcast date. None when the filing or the prices are missing. closes: indexed by date.
+    """
+    if pledged_pct is None or disclosure_date is None or closes is None or closes.empty:
+        return None
+    closes = closes.sort_index()
+    before = closes[closes.index <= pd.Timestamp(disclosure_date)]
+    if before.empty:
+        return None
+    d = float(distance(before.iloc[-1], closes.iloc[-1]))
+    return None if not np.isfinite(d) else bool(pledged_pct >= MIN_ENC and d < CLOSE)
+
+
 def rate_ratio_bootstrap(df: pd.DataFrame, flag: str, outcome: str = "event_observed", block: int = 12,
                          n_boot: int = 2000, seed: int = 11) -> dict:
     """

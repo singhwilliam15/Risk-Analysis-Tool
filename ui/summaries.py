@@ -204,7 +204,7 @@ def _events(ctx) -> dict:
         "methods": [f"NSE shareholding filings, point in time; tiers from written rules; trigger assumes the loan "
                     f"starts at 2× cover and lenders sell at 1.5×; methodology "
                     f"{plain.VOCAB['pledge'][3]}–{plain.VOCAB['margin_call'][3]}."],
-        "chips": ["e1", "e2"],
+        "chips": ["e1", "e2", "m1"],
     }
 
 

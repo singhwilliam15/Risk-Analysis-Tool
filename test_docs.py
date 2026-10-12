@@ -95,5 +95,7 @@ def test_readme_findings_match_the_results_files():
     expected += [f"{decision['coverage']['filings']:,} NSE shareholding filings",
                  f"{e.loc['e1', 'Lift']:.1f} times as often as average (90% range {e.loc['e1', 'Lift 5%']:.1f}–{e.loc['e1', 'Lift 95%']:.1f})",
                  f"which had a lift of {e.loc['drawdown_30', 'Lift']:.1f}", f"the lift stays at {inc.loc['e1', 'Lift']:.1f}"]
+    ratio = _results("margin_trigger_rate_ratio.csv").iloc[0]
+    expected += [f"crash-rate ratio {ratio['ratio']:.2f} (90% range {ratio['low']:.2f}–{ratio['high']:.2f})"]
     missing = [x for x in expected if x not in readme]
     assert not missing, missing

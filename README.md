@@ -63,6 +63,8 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
      1.9 times as often as average (90% range 1.6–2.2).
    - **They don't beat momentum,** which had a lift of 2.4.
    - **They add information momentum misses.** Among stocks not already down 30%, the lift stays at 1.9.
+   - **Being close to the lenders' selling price adds little beyond the pledge level** (pre-registered, Oct 2026):
+     crash-rate ratio 1.29 (90% range 0.93–2.25). [Margin-trigger test](docs/case_studies.md#margin-trigger-distance-every-nse-stock-20222024-october-2026)
    - Pre-2021 pledges are not served by any exchange to scripts, so Zee, Jet Airways and DHFL remain untested on
      this pillar. [Wider event test](docs/case_studies.md#wider-event-test-every-nse-stock-20212024-october-2026)
 
@@ -112,7 +114,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 648 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 654 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).

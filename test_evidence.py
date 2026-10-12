@@ -35,6 +35,10 @@ def test_registry_reproduces_the_committed_results():
         assert reg.loc[sid, "low"] == pytest.approx(e.loc[sid, "Lift 5%"])
     assert reg.loc["drawdown_30", "badge"] == V.WORKS
     assert reg.loc["r1", "badge"] == V.NO_EFFECT and reg.loc["e1", "badge"] == V.WEAKER
+    # M1 (margin-trigger distance, pre-registered Oct 2026): warns, does not beat momentum
+    m = pd.read_csv(V.RESULTS / "margin_trigger_bootstrap.csv")
+    m = m[m["Universe"] == "all"].set_index("Rule")
+    assert reg.loc["m1", "lift"] == pytest.approx(m.loc["m1", "Lift"]) and reg.loc["m1", "badge"] == V.WEAKER
 
 
 def test_registry_order_and_untested_signals():
