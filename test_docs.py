@@ -10,7 +10,9 @@ import pytest
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = ["README.md", "docs/features.md", "docs/case_studies.md", "docs/methodology.md", "docs/deploy.md",
         "docs/interview_story.md", "docs/preregistration_warnings_v2.md", "docs/preregistration_events.md",
-        "docs/data_sources.md", "docs/plans/v6_phase1_manual_checklist.md"]
+        "docs/data_sources.md", "docs/plans/v6_phase1_manual_checklist.md", "docs/research_note.md",
+        "docs/preregistration_margin_trigger.md", "docs/plans/README.md", "docs/plans/v6_adjustments.md",
+        "docs/plans/v6_final_checklist.md", "docs/images/README.md"]
 STALE = ["is being extended", "Market risk** is complete", "Market risk is complete", "Coming next (Phase 6)",
          "434 tests", "434 offline tests", "measures those links", "until the Phase 7 case studies",
          "banks are not modelled beyond the manual panel",
@@ -69,24 +71,26 @@ def _results(name):
 
 def test_readme_findings_match_the_results_files():
     import json
-    readme = _read("README.md")
+    readme = " ".join(_read("README.md").split())  # line wrapping does not matter
     expected = []
     tally = _results("tally.csv").set_index("Pillar")
     any_, ma = tally.loc["any"], tally.loc["below_200dma"]
-    expected += [f"On {int(any_['Case dates'])} dates", f"it warned on {int(any_['Hits'])}",
+    expected += [f"warned on {int(any_['Hits'])} of {int(any_['Case dates'])} dates",
                  f"false alarms on {any_['False-positive rate']:.1%} of {int(any_['Control dates'])} control dates",
                  f"also warned on {int(ma['Hits'])}", f"{ma['False-positive rate']:.0%} false alarms"]
     meta = json.loads(_read("case_studies/results/universe_meta.json"))
     m = _results("universe_metrics.csv")
     m = m[(m["Universe"] == "all") & (m["Outcome"] == "observed path")].set_index("Rule")
-    expected += [f"{meta['symbols_evaluated']:,} stocks", f"Their lift is {m.loc['tool', 'Lift']:.2f}",
+    expected += [f"On {meta['symbols_evaluated']:,} stocks", f"their lift is {m.loc['tool', 'Lift']:.2f}",
                  f"does twice as well ({m.loc['drawdown_30', 'Lift']:.2f})", f"fires on {m.loc['market', 'Flag rate']:.0%} of all NSE"]
     t = _results("warnings_v2_test.csv")
     t = t[(t["Universe"] == "all") & (t["Outcome"] == "observed path")].set_index("Rule")
     b = _results("warnings_v2_bootstrap.csv")
     b = b[b["Universe"] == "all"].set_index("Rule")
     expected += [f"lift of {t.loc['r4', 'Lift']:.2f} against momentum's {t.loc['drawdown_30', 'Lift']:.2f}",
-                 f"({b.loc['r4', 'Difference 5%']:.2f} to +{b.loc['r4', 'Difference 95%']:.2f})".replace("-", "−")]
+                 f"({b.loc['r4', 'Difference 5%']:.2f} to +{b.loc['r4', 'Difference 95%']:.2f})".replace("-", "−"),
+                 f"crashed {b.loc['drawdown_30', 'Lift']:.2f} times as often as average out of sample, 2020–24 "
+                 f"(90% range {b.loc['drawdown_30', 'Lift 5%']:.2f}–{b.loc['drawdown_30', 'Lift 95%']:.2f})"]
     decision = json.loads(_read("case_studies/results/events_decision.json"))
     e = _results("events_bootstrap.csv")
     e = e[e["Window"].str.startswith("primary") & (e["Universe"] == "all")].set_index("Rule")
@@ -99,3 +103,20 @@ def test_readme_findings_match_the_results_files():
     expected += [f"crash-rate ratio {ratio['ratio']:.2f} (90% range {ratio['low']:.2f}–{ratio['high']:.2f})"]
     missing = [x for x in expected if x not in readme]
     assert not missing, missing
+
+
+def test_interview_story_numbers_match_the_results():
+    import json
+    story = " ".join(_read("docs/interview_story.md").split())
+    b = _results("warnings_v2_bootstrap.csv")
+    b = b[b["Universe"] == "all"].set_index("Rule")
+    e = _results("events_bootstrap.csv")
+    e = e[e["Window"].str.startswith("primary") & (e["Universe"] == "all")].set_index("Rule")
+    filings = json.loads(_read("case_studies/results/events_decision.json"))["coverage"]["filings"]
+    margin = json.loads(_read("case_studies/results/margin_trigger_decision.json"))
+    expected = [f"crashed {b.loc['drawdown_30', 'Lift']:.2f} times as often as average",
+                f"The best scored {b.loc['r4', 'Lift']:.2f}", f"tested on {filings:,} shareholding filings",
+                f"warn at {e.loc['e1', 'Lift']:.1f} times average"]
+    missing = [x for x in expected if x not in story]
+    assert not missing, missing
+    assert not margin["close_adds_beyond_encumbrance"] and "was not supported" in story

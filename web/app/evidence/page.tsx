@@ -22,6 +22,13 @@ export default function EvidencePage() {
           before the results were computed, then run out of sample on every NSE stock, delisted ones included. Lift =
           how many times more often a flagged stock fell 50% or more within 12 months than the average stock.
         </p>
+        <p>
+          The full write-up is the research note,{" "}
+          <a href={`${REPO_URL}/blob/main/docs/research_note.md`}>
+            “What predicts 50% crashes in Indian stocks? Evidence from every NSE stock, 2016–2024”
+          </a>{" "}
+          (<a href={`${REPO_URL}/raw/main/docs/research_note.pdf`}>PDF</a>).
+        </p>
       </header>
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">Every signal, by strength of evidence</h2>

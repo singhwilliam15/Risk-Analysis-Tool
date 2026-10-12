@@ -1,16 +1,14 @@
 # Screenshots
 
-Images used in the README. They were captured on 3 Oct 2026 from the running app (`streamlit run app.py
---theme.base dark`) in demo-snapshot mode (prices to 2 Oct 2026). A headless browser (playwright, Microsoft Edge) at
-1,700 px width captured the main area; empty space below the content is trimmed.
+Images used in the README and the research note. No NSE data appears in them: the app was run with an empty
+disclosure folder.
 
-| File | What it shows |
-| --- | --- |
-| `cro-dashboard.png` | Overview, default 5-stock portfolio at ₹10 lakh: the CRO dashboard (pillar rows, bottom line, top risks and actions) |
-| `integrated-stress.png` | Integrated Stress, same portfolio: the linked loss per scenario split by Shapley values, interaction, feedback rounds, reverse stress |
-| `credit-panel.png` | Credit, HDFC Bank: RBI PCA headline, the PCA table with distance to each trigger, and the five-year trend |
-| `case_studies.png` | Case studies: realised loss after each as-of date, red where the tool warned (written by `case_studies/run.py`) |
-| `liquidity-waterfall.png` | Liquidity: VaR → spread → impact → circuit-lock waterfall (captured 2 Oct 2026; not used in the README now) |
+| File | What it shows | Made by |
+| --- | --- | --- |
+| `summary-overview.png` | The app's Overview page in the Summary view, default 5-stock portfolio at ₹10 lakh (prices to 9 Oct 2026) | Playwright, 12 Oct 2026 |
+| `summary-market.png` | The app's Market page in the Summary view, same portfolio | Playwright, 12 Oct 2026 |
+| `website-evidence.png` | The website's Evidence page: every signal and its tested record | Playwright, 12 Oct 2026 |
+| `research_lifts.png` | Lift with 90% ranges for every tested signal | `scripts/build_research_note.py` |
+| `case_studies.png` | Realised loss after each case-study date, red where the tool warned | `case_studies/run.py` |
 
-To refresh them, run the app with the same settings and capture the same pages; rerun `case_studies/run.py` for the
-case-study chart.
+To refresh the screenshots, run the app (`streamlit run app.py`) and capture the same pages in the Summary view.

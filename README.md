@@ -4,70 +4,41 @@
 ![Python 3.11 | 3.12](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Market, liquidity, credit, concentration and event risk for an Indian or US stock or portfolio**, run through one
-linked stress engine. Every headline number has a 90% range and an A–D trust grade. The tool was tested against
-real Indian collapses and against every NSE stock from 2016 to 2024, and it reports where it does not beat simpler
-rules.
+**Which warning signs actually predict a 50% crash in an Indian stock, and how much could a portfolio lose when
+market, liquidity, credit and promoter-pledge risk hit together?** This tool measures all five pillars for an Indian
+or US stock or portfolio, links them in one stress engine, gives every headline number a 90% range and an A–D trust
+grade, and shows each warning signal's tested record on every NSE stock, failures included.
 
-**▶ Live demo: [risk-analysis-tool.streamlit.app](https://risk-analysis-tool.streamlit.app/)**. Any page can be opened directly, e.g. [the Market page with its signals and their tested record](https://risk-analysis-tool.streamlit.app/?page=market).
-**Website** (read-only results for 8 presets, rebuilt weekly): [singhwilliam15.github.io/Risk-Analysis-Tool](https://singhwilliam15.github.io/Risk-Analysis-Tool/), live once GitHub Pages is enabled ([deploy](docs/deploy.md#website-on-github-pages)).
-It opens on a demo snapshot of the presets, rebuilt after every NSE session (prices to the last trading day), so
-they load at once. Switch **Data → Live** in
-the sidebar for today's prices, or type any NSE, BSE or US ticker.
+**[Website](https://singhwilliam15.github.io/Risk-Analysis-Tool/)** (results for 8 presets) ·
+**[Live app](https://risk-analysis-tool.streamlit.app/)** (any NSE, BSE or US ticker) ·
+**[Research note](docs/research_note.md)** ([PDF](docs/research_note.pdf)) · [The 2-minute story](docs/interview_story.md)
 
-| CRO dashboard | Integrated stress | Bank credit (RBI PCA) |
+| Every page opens with a verdict | Plain words, technical terms in brackets | Every signal's tested record |
 | --- | --- | --- |
-| [![CRO dashboard](docs/images/cro-dashboard.png)](docs/images/cro-dashboard.png) | [![Integrated stress](docs/images/integrated-stress.png)](docs/images/integrated-stress.png) | [![HDFC Bank against RBI's PCA triggers](docs/images/credit-panel.png)](docs/images/credit-panel.png) |
+| [![Overview summary](docs/images/summary-overview.png)](docs/images/summary-overview.png) | [![Market summary](docs/images/summary-market.png)](docs/images/summary-market.png) | [![Evidence page](docs/images/website-evidence.png)](docs/images/website-evidence.png) |
 
-## Six findings, including the negative ones
+## Six findings, with their evidence
 
-1. **On 24 dates before six Indian collapses, it warned on 19, with false alarms on 9.2% of 240 control dates.**
-   But "price below its 200-day average" also warned on 18. It did so with 25% false alarms, and earlier on Zee
-   and Future Retail. The tool's edge on these dates is precision, not catching more.
-   [Case studies](docs/case_studies.md#does-it-beat-a-naive-rule-review-m1)
-2. **On every NSE stock from 2016 to 2024 (2,315 stocks, delisted ones included), the price flags barely beat
-   chance.** Their lift is 1.13 for a 50% fall within a year. "Down 30% in six months" does twice as well (2.24).
-   The cause is one threshold: the 5% daily-ES floor, set with large caps in mind, fires on 73% of all NSE
-   stock-dates.
-   - It was not re-tuned after the fact. Instead, four new rules were tested out of sample under a pre-registration:
-     designed on 2016–18, tested once on 2020–24.
-   - **The new rules did not beat momentum by a margin the test could confirm.** The pre-registered challenger, a
-     combined score, reached a lift of 2.26 against momentum's 1.78, but the 90% interval of the difference
-     (−0.58 to +1.05) includes zero.
-   - So the app keeps v1 and shows the challenger beside it.
-   - A simple peer-relative rule held a lift of about 2 in every test year, including 2020, when momentum
-     failed. It is reported as exploratory.
-   [Warnings v2](docs/case_studies.md#warnings-v2-out-of-sample-test-october-2026) [Wider test](docs/case_studies.md#wider-test-every-nse-stock-20162024-review-m1)
-3. **Cross-pillar effects appear only where the data create them.** Pledge selling and circuit locks move the price
-   round after round, and the loss is split by exact Shapley values.
-   - With real NSE pledge data, the 5-stock portfolio's Global Financial Crisis replay gains a +₹5,222 interaction
-     over 4 rounds (₹4.89 lakh loss on ₹10 lakh).
-   - Jaiprakash Power, with 73% of promoter shares pledged, loses ₹6.46 lakh on a −20% market move, against
-     ₹2.19 lakh from the market alone.
-   - Both use prices to 9 Oct 2026 and NSE's pledge, band and rating files of 2 Oct 2026.
-   - Without pledges the interaction is zero, and the page says so.
-4. **Banks are measured against RBI's own triggers.**
-   - HDFC Bank sits 5.62 pp clear of every Prompt Corrective Action threshold.
-   - Yes Bank was in risk threshold 1 (CET1 8.4%) six months before its 2020 moratorium, using the 2021
-     thresholds as a benchmark.
-   - The data come from NSE results XBRL and annual reports, cited by page.
-5. **A key assumption failed its own test and was replaced.**
-   - The event-jump overlay assumed a 0.5% daily jump chance for High-risk stocks, which is 72% a year.
-   - Measured on NSE-wide base rates, price-based risk proxies showed no more stock-specific crashes than the stock's
-     own history, which the base model already uses. The default is now 0.
-   - The disclosure tiers were then tested the same way on 27,033 NSE shareholding filings from 2021 to 2024, and
-     showed no excess either, so the default stays 0.
-   - A grid shows what any assumed jump would add. [Methodology §12.4](docs/methodology.md#124-jump-overlay-on-es)
-6. **Promoter pledges carry a real warning that momentum misses, but they don't beat momentum.**
-   - The test covers every NSE company, 2022–2024, under a pre-registration, on the filings as first published.
-   - **Pledges warn.** Stocks with half or more of promoter shares pledged or encumbered fell 50% within a year
-     1.9 times as often as average (90% range 1.6–2.2).
-   - **They don't beat momentum,** which had a lift of 2.4.
-   - **They add information momentum misses.** Among stocks not already down 30%, the lift stays at 1.9.
-   - **Being close to the lenders' selling price adds little beyond the pledge level** (pre-registered, Oct 2026):
-     crash-rate ratio 1.29 (90% range 0.93–2.25). [Margin-trigger test](docs/case_studies.md#margin-trigger-distance-every-nse-stock-20222024-october-2026)
-   - Pre-2021 pledges are not served by any exchange to scripts, so Zee, Jet Airways and DHFL remain untested on
-     this pillar. [Wider event test](docs/case_studies.md#wider-event-test-every-nse-stock-20212024-october-2026)
+Tests were pre-registered (rules committed before results) and run on every NSE stock, delisted ones included.
+Lift = how many times more often flagged stocks fell 50% within a year than the average stock.
+
+1. **Momentum is the rule to beat.** "Down 30% in six months" flagged stocks that crashed 1.78 times as often as
+   average out of sample, 2020–24 (90% range 1.10–3.05). [Research note](docs/research_note.md)
+2. **The tool's original price flags barely beat chance.** On 2,315 stocks, 2016–24, their lift is 1.13, while
+   "down 30% in six months" does twice as well (2.24): one tail-risk threshold fires on 73% of all NSE stock-dates.
+   [Wider test](docs/case_studies.md#wider-test-every-nse-stock-20162024-review-m1)
+3. **Better rules, not confirmably better than momentum.** The pre-registered challenger reached a lift of 2.26
+   against momentum's 1.78, but the 90% interval of the difference (−0.58 to +1.05) includes zero, so the app keeps
+   the old flag and says why. [Warnings v2](docs/case_studies.md#warnings-v2-out-of-sample-test-october-2026)
+4. **Promoter pledges warn, and catch what momentum misses.** On 27,033 NSE shareholding filings, stocks with half
+   or more of promoter shares pledged fell 50% 1.9 times as often as average (90% range 1.6–2.2). They don't beat
+   momentum, which had a lift of 2.4, but among stocks not already down 30% the lift stays at 1.9.
+   [Wider event test](docs/case_studies.md#wider-event-test-every-nse-stock-20212024-october-2026)
+5. **Being close to the lenders' selling price adds little beyond the pledge level:** crash-rate ratio 1.29 (90%
+   range 0.93–2.25), so the pre-registered hypothesis is not supported. [Margin-trigger test](docs/case_studies.md#margin-trigger-distance-every-nse-stock-20222024-october-2026)
+6. **Before six Indian collapses it warned on 19 of 24 dates**, with false alarms on 9.2% of 240 control dates.
+   "Price below its 200-day average" also warned on 18, with 25% false alarms, so the edge is precision. An assumed
+   crash overlay failed its own test and now defaults to zero. [Case studies](docs/case_studies.md)
 
 ## What it does
 
@@ -84,7 +55,7 @@ the sidebar for today's prices, or type any NSE, BSE or US ticker.
 
 More: [features and live results](docs/features.md) · [methodology and references](docs/methodology.md) ·
 [case studies and the wider test](docs/case_studies.md) · [deploying](docs/deploy.md) ·
-[the 2-minute story](docs/interview_story.md)
+[the 2-minute story](docs/interview_story.md) · [research note](docs/research_note.md) · [plans](docs/plans/README.md)
 
 ## Run it
 
@@ -100,12 +71,12 @@ streamlit run app.py
 Tickers use Yahoo Finance symbols: `RELIANCE.NS` (NSE), `.BO` (BSE), `AAPL` (US). On Windows you can double-click
 `run_app.bat`.
 
-| Run | First page | All 9 pages | Peak memory |
+| Run | First page | All 10 pages | Peak memory |
 | --- | --- | --- | --- |
-| Demo snapshot (default portfolio) | 7 s | 28 s | 377 MB |
-| Live downloads and calculations | 59 s | 80 s | 369 MB |
+| Demo snapshot (default portfolio) | 4.3 s | 11.9 s | 367 MB |
+| Live downloads and calculations | 51.2 s | 58.3 s | 365 MB |
 
-Measured cold on a laptop with `scripts/measure_app.py` on 11 Oct 2026. Streamlit Community Cloud allows at least 690 MB, and
+Measured cold on a laptop with `scripts/measure_app.py` on 12 Oct 2026. Streamlit Community Cloud allows at least 690 MB, and
 `test_deploy.py` checks the snapshot run stays under it.
 
 ## Tests
@@ -115,7 +86,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 659 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 677 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).
@@ -131,6 +102,8 @@ collection without its written permission ([data sources](docs/data_sources.md))
 | `refresh_factor_data.py` | Factor files |
 | `fetch_bhavcopy.py` + `run_universe.py` | The wider test (not run since Oct 2026) |
 | `build_snapshot.py` | The demo snapshot |
+| `site_data/build.py` (repository root) | The website's data (then `npm run build` in `web/`) |
+| `build_research_note.py` | The research note from the results files |
 
 ## Limits, in short
 

@@ -1,58 +1,59 @@
 # The 2-minute story
 
-A script to say out loud: about 330 words, roughly two minutes at a natural pace. Every number is from the runs of
-2–3 Oct 2026 (README, `docs/case_studies.md`). It was rewritten after an external review that found the first
-version over-claimed; the review and its fixes are in `docs/plans/REVIEW_FIXES_V4.md`.
+A script to say out loud: about 330 words, roughly two minutes at a natural pace. Every number comes from the
+committed results and is checked by `test_docs.py`. The written version is the
+[research note](research_note.md).
 
 ---
 
 **1. The problem (20 seconds)**
 
-Most risk tools put market, liquidity and credit risk on separate pages. In an Indian crisis they arrive together:
-prices fall, the stock locks at its lower circuit, and lenders sell pledged promoter shares, which pushes the price
-down further. I wanted a tool that models that spiral, and that says how far each number can be trusted.
+In an Indian crisis, market, liquidity and credit risk arrive together. Prices fall, the stock locks at its lower
+circuit, and lenders sell pledged promoter shares, which pushes the price down further. Most risk tools show these on
+separate pages, and few say which of their warning lights have ever worked.
 
 **2. What I built (40 seconds)**
 
-It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 659 offline tests.
+It's a risk tool for Indian and US stocks and portfolios, in Python and Streamlit, with 677 offline tests, plus a
+website that publishes its results.
 
-- **Five pillars** (market, liquidity, credit, concentration, and event risk), plus a check of banks against RBI's
-  Prompt Corrective Action triggers.
+- **Five pillars** (market, liquidity, credit, concentration, and promoter pledges), linked in one stress engine.
+  Forced selling moves the price round after round, and an exact Shapley split shows what each pillar adds.
 - **A trust layer:** every headline number has a 90% range and an A-to-D grade.
-- **A linked stress engine.** Forced pledge selling and circuit locks move the price round after round until it
-  settles, and an exact Shapley split shows how much each pillar adds. With real NSE pledge data, Jaiprakash
-  Power loses 64% on a 20% market fall, three times the market move alone. Without pledges the cross effect is
-  zero, and the tool says so.
+- **Plain language:** every page opens with Clear, Watch or Warning, one sentence, and what to do.
 
-**3. Testing it honestly (40 seconds)**
+**3. Testing it honestly (45 seconds)**
 
-I ran it before five Indian collapses using only data public at the time. It warned on 19 of 24 dates. Yes Bank was
-inside RBI's first PCA threshold six months before its moratorium.
+I tested every warning signal on every NSE stock from 2016 to 2024, delisted ones included, and wrote the rules
+down before running each test. The simplest rule won: "down 30% in six months" flagged stocks that crashed 1.78
+times as often as average out of sample. My own price flags barely beat chance, so I designed better ones on
+2016–18 and tested them once on 2020–24. The best scored 2.26, but not by a margin the test could confirm, so the
+app still uses the old flag and says why. Promoter pledges, tested on 27,033 shareholding filings, warn at 1.9
+times average and still do among stocks that haven't fallen yet. My own idea, that being near the lenders' trigger
+price adds more, was not supported.
 
-Then I checked it against simple rules. "Price below its 200-day average" also caught 18 of 24, with nearly three times
-the false alarms, so my edge there is precision. On every NSE stock from 2016 to 2024, delisted ones included, my
-price flags barely beat chance: one tail-risk threshold, set with large caps in mind, fires on 73% of all NSE stock-days. "Down 30% in six months"
-did twice as well. I reported that rather than re-tuning after the fact. Then I tested four new rules the way a
-researcher would: I wrote down the rules and the pass mark first, designed on 2016–18 and tested once on 2020–24.
-The best one scored higher than momentum, but not by a margin the test could confirm, so the app still uses the old
-flag and says so. I did the same for promoter pledges, on 27,000 NSE shareholding filings: they warn, and they
-catch risky stocks whose price hasn't moved yet, but they still don't beat momentum.
+**4. What I changed because of the evidence (15 seconds)**
 
-**4. What I changed because of the evidence (20 seconds)**
-
-The event overlay assumed a high-risk stock had a 72% yearly chance of a 20% crash. NSE-wide base rates didn't
-support it, so the default is now zero, with a grid showing what any assumption would add. The next step is a
-size-aware volatility rule, tested out of sample.
+An assumed crash overlay failed its own test, so its default is now zero. When NSE's terms turned out to forbid
+automated collection, I stopped downloading, removed their lists from the repository and asked for permission.
 
 ---
 
-**Likely follow-up questions, and the short answers**
+**Likely CRO questions, and the short answers**
 
-- *Why Shapley?* It splits a loss exactly across market, liquidity, credit and events, whatever the order in which
-  they act, and the interaction is what is left when they act together.
-- *Why didn't credit add a loss for shareholders?* The Merton PD is implied from the share price, which the scenario
-  already marks down, so adding it would count the same risk twice. Credit is a signal there, and a loss only for
-  bonds and loans.
-- *How do you avoid survivorship bias?* The wider test uses NSE's daily files, which keep delisted stocks. Prices are
-  adjusted for bonuses and splits with NSE's corporate-action list, because NSE's previous close is not adjusted.
-- *Why grades?* A VaR with a ±40% range should not look as solid as one with ±10%.
+1. *Why Expected Shortfall rather than VaR?* VaR says where the bad tail starts; ES says how bad it is on average
+   once you are in it, and it adds up across positions. Basel's market-risk rules moved to ES for that reason.
+2. *How do you know the model works?* Every model is backtested out of sample with Kupiec, Christoffersen and the
+   McNeil–Frey ES test. The recommended one has the lowest tick loss among those that pass.
+3. *Survivorship and look-ahead bias?* NSE's daily files keep delisted stocks, and each filing counts only from the
+   day it became public.
+4. *Why pre-register?* Testing many rules and reporting the best one finds luck. Committing the rules first, with
+   git as the timestamp, makes a failed test count as a failure.
+5. *Why Shapley?* It splits a loss exactly across pillars, whatever order they act in; the interaction is what
+   appears only when they act together.
+6. *Why not add the default probability to equity losses?* The Merton PD is implied from the share price, which the
+   scenario already marks down, so it would count the same risk twice. It is a loss only for bonds and loans.
+7. *What would you do with more data?* With NSE's permission: a fresh 2025 holdout and a forward ledger that records
+   each month's flags before the outcomes are known.
+8. *What are the limits?* One market, few crises, overlapping outcomes, and pledges measured with other encumbrances
+   before 2025. The ranges are wide, and the tool shows them.
