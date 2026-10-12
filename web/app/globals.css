@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+body { @apply bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100; }
+a { @apply text-blue-700 underline underline-offset-2 dark:text-blue-300; }
+header a, nav a { @apply no-underline; }
+
+/* Markdown from the docs and the app's notes */
+.prose-doc h1 { @apply mb-4 mt-8 text-3xl font-bold; }
+.prose-doc h2 { @apply mb-3 mt-8 scroll-mt-4 text-2xl font-semibold; }
+.prose-doc h3 { @apply mb-2 mt-6 scroll-mt-4 text-xl font-semibold; }
+.prose-doc h4 { @apply mb-2 mt-4 font-semibold; }
+.prose-doc p { @apply my-2 leading-relaxed; }
+.prose-doc ul { @apply my-2 list-disc pl-6; }
+.prose-doc ol { @apply my-2 list-decimal pl-6; }
+.prose-doc li { @apply my-0.5; }
+.prose-doc a { @apply underline; }
+.prose-doc code { @apply rounded bg-slate-100 px-1 text-sm dark:bg-slate-800; }
+.prose-doc pre { @apply my-3 overflow-x-auto rounded bg-slate-100 p-3 text-sm dark:bg-slate-800; }
+.prose-doc pre code { @apply bg-transparent p-0; }
+.prose-doc table { @apply my-3 block overflow-x-auto text-sm; }
+.prose-doc th, .prose-doc td { @apply border border-slate-200 px-2 py-1 text-left dark:border-slate-700; }
+.prose-doc blockquote { @apply my-3 border-l-4 border-slate-300 pl-4 text-slate-600 dark:border-slate-600 dark:text-slate-300; }
+.prose-doc img { @apply my-3 max-w-full; }

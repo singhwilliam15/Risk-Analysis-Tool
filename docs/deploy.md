@@ -55,6 +55,34 @@ Details:
 portfolio, and checks the peak memory against the 690 MB minimum. `python scripts/measure_app.py [--live]` prints
 the same figures.
 
+## Website on GitHub Pages
+
+The website (`web/`, Next.js static export) shows the app's results for 8 presets in the Summary style. It does no
+calculations: `site_data/build.py` runs the app on each preset and writes JSON, and the site renders it. The workflow
+`.github/workflows/site.yml` runs the tests, builds the data and the site, and publishes it on every push to main,
+weekly, and by hand.
+
+**One-time manual steps:**
+1. On GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. Merge `final-v6` into main and push. The first run of the "website" workflow publishes
+   https://singhwilliam15.github.io/Risk-Analysis-Tool/.
+3. Optional custom domain: Settings → Pages → Custom domain, then build with `NEXT_PUBLIC_BASE_PATH=""`
+   (set it as an env value in the workflow's build step).
+
+**Build locally** (Node.js 24 and the Python environment):
+
+```bash
+python site_data/build.py          # web/public/data (about 3 minutes; the demo snapshot makes it offline)
+cd web && npm ci && npm run build && npm run check
+node scripts/serve.mjs              # http://localhost:8600/Risk-Analysis-Tool/
+```
+
+**Rules:**
+- No NSE lists are published (NSE's terms; [data sources](data_sources.md)). The pledge page shows the tested
+  evidence and links to the live app's upload.
+- `npm audit` reports advisories in build-time tooling only (Tailwind 3's file watcher and PostCSS). The published
+  site is static files, with no server code.
+
 ## Manual steps for the rename (review P1)
 
 These need your GitHub and Streamlit accounts, so they are listed here rather than done by a script.

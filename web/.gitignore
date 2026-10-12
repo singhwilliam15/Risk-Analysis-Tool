@@ -1,0 +1,7 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+# Built by site_data/build.py (python site_data/build.py), not committed
+public/data/

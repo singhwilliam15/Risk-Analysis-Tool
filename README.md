@@ -10,6 +10,7 @@ real Indian collapses and against every NSE stock from 2016 to 2024, and it repo
 rules.
 
 **▶ Live demo: [risk-analysis-tool.streamlit.app](https://risk-analysis-tool.streamlit.app/)**. Any page can be opened directly, e.g. [the Market page with its signals and their tested record](https://risk-analysis-tool.streamlit.app/?page=market).
+**Website** (read-only results for 8 presets, rebuilt weekly): [singhwilliam15.github.io/Risk-Analysis-Tool](https://singhwilliam15.github.io/Risk-Analysis-Tool/), live once GitHub Pages is enabled ([deploy](docs/deploy.md#website-on-github-pages)).
 It opens on a demo snapshot of the presets, rebuilt after every NSE session (prices to the last trading day), so
 they load at once. Switch **Data → Live** in
 the sidebar for today's prices, or type any NSE, BSE or US ticker.
@@ -114,7 +115,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-There are 654 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
+There are 659 tests, run offline in CI on Python 3.11 and 3.12. The network is blocked, so market data come from a
 synthetic generator, saved real files or the bundled snapshot. Each calculation is checked against an independent
 reference: a closed form, a large simulation, a hand calculation or a known true parameter.
 [What they check](docs/features.md#tests).
