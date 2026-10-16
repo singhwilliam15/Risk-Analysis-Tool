@@ -2,9 +2,9 @@
   "python": "3.11.17",
   "pandas": "3.0.6",
   "numpy": "2.4.6",
-  "built": "2026-10-15T17:16:28",
-  "prices_as_of": "2026-10-15T00:00:00",
+  "built": "2026-10-16T16:53:50",
+  "prices_as_of": "2026-10-16T00:00:00",
   "entries": 168,
-  "sha256": "c544bf3c3d575a9180f7a4c4b08734eb60dbfcef57f2cd01bf0dd820c2f56d8e",
-  "bytes": 12934006
+  "sha256": "4a943957ce51dacc6e17d361effa95be3959552d79f4bd1da97361f7f693265d",
+  "bytes": 12936799
 }
